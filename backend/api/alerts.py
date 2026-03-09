@@ -165,46 +165,90 @@ async def get_alert_evidence(
     
     return evidence_chain
 
+import json
+import datetime
+from fastapi.responses import Response
+from backend.models import ScanResult, EvidenceChain
 
-@router.get("/{alert_id}/evidence/export")
+@router.get("/{alert_id}/evidence/export", response_class=Response)
 async def export_alert_evidence(
     alert_id: int,
-    export_format: str = Query("json", pattern="^(json|cef|stix|pdf)$"),
     db: Session = Depends(get_db)
-):
+) -> Response:
     """
-    Export forensic evidence package for an alert.
-    
-    Supported formats:
-    - json: Structured JSON export
-    - cef: Common Event Format (SIEM integration)
-    - stix: Structured Threat Information eXpression
-    - pdf: Human-readable PDF report (future implementation)
-    
-    Returns a downloadable evidence package.
+    Build and return a downloadable evidence bundle for the given alert.
+    The bundle contains: alert metadata, scan result scores per model,
+    GradCAM path, and the full evidence chain log.
     """
     alert = db.query(Alert).filter(Alert.id == alert_id).first()
-    
     if not alert:
         raise HTTPException(
-            status_code=404,
-            detail=f"Alert {alert_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "alert_not_found",
+                    "message": f"No alert found with id={alert_id}"},
         )
-    
-    # TODO: Implement evidence export logic
-    # This would package all evidence, generate the appropriate format,
-    # and return as a downloadable file
-    
-    logger.warning(f"Evidence export not yet implemented for alert {alert_id}")
-    
-    return {
-        "alert_id": alert_id,
-        "format": export_format,
-        "status": "not_implemented",
-        "message": "Evidence export will be implemented in Phase 9"
+
+    scan = db.query(ScanResult).filter(
+        ScanResult.alert_id == alert_id
+    ).first()
+
+    chain_entries = db.query(EvidenceChain).filter(
+        EvidenceChain.alert_id == alert_id
+    ).order_by(EvidenceChain.timestamp.asc()).all()
+
+    model_scores: dict = {}
+    if scan and scan.model_scores:
+        try:
+            model_scores = json.loads(scan.model_scores)
+        except (TypeError, json.JSONDecodeError):
+            model_scores = {}
+
+    bundle = {
+        "schema_version": "1.0",
+        "exported_at": datetime.datetime.utcnow().isoformat() + "Z",
+        "alert": {
+            "id": alert.id,
+            "created_at": alert.created_at.isoformat() if alert.created_at else None,
+            "severity": alert.severity,
+            "source_type": alert.source_type,
+            "source_url": getattr(alert, 'source_url', None),
+        },
+        "verdict": {
+            "label": scan.verdict if scan else "unknown",
+            "confidence": scan.confidence if scan else None,
+            "faces_detected": scan.faces_detected if scan else 0,
+            "processing_time_ms": scan.processing_time_ms if scan else None,
+        },
+        "model_scores": model_scores,
+        "explainability": {
+            "gradcam_path": scan.gradcam_path if scan else None,
+            "gradcam_available": bool(scan and scan.gradcam_path),
+        },
+        "evidence_chain": [
+            {
+                "step": i + 1,
+                "timestamp": entry.timestamp.isoformat() if entry.timestamp else None,
+                "stage": getattr(entry, 'stage', str(entry.id)),
+                "detail": getattr(entry, 'detail', str(entry.id)),
+                "model": getattr(entry, 'model_name', None),
+                "score": getattr(entry, 'score', None),
+            }
+            for i, entry in enumerate(chain_entries)
+        ],
     }
 
+    payload = json.dumps(bundle, indent=2, default=str)
+    filename = f"kavach_evidence_alert_{alert_id}.json"
 
+    return Response(
+        content=payload,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Evidence-Alert-ID": str(alert_id),
+            "X-Export-Timestamp": bundle["exported_at"],
+        },
+    )
 @router.post("/{alert_id}/resolve", response_model=AlertResponse)
 async def resolve_alert(
     alert_id: int,

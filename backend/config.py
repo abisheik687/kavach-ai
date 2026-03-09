@@ -29,6 +29,21 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     WORKERS: int = 4
+
+    # Registration gate — set to 'true' only during initial setup
+    REGISTER_ENABLED: bool = False
+
+    # CORS — comma-separated list of allowed origins
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+
+    # Inference concurrency — 2 for CPU, 4 for GPU
+    MAX_CONCURRENT_MODELS: int = 2
+
+    # Optional: local model checkpoint overrides for trained weights
+    KAVACH_MODEL_PRIMARY_PATH: Optional[str] = None
+    KAVACH_MODEL_SECONDARY_PATH: Optional[str] = None
+    KAVACH_MODEL_EFFICIENTNET_PATH: Optional[str] = None
+    KAVACH_MODEL_XCEPTION_PATH: Optional[str] = None
     
     # ============================================
     # DATABASE

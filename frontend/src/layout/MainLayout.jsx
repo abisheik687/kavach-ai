@@ -1,98 +1,93 @@
-
 import { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Upload, Activity, FileText, Menu, X, Shield, Lock, Cpu, GraduationCap, Scan, Video, Image } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { NavLink, Outlet } from 'react-router-dom';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
-const SidebarItem = ({ icon: Icon, label, path, active }) => (
-    <Link to={path}>
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${active ? 'bg-neon-blue/10 text-neon-blue border-r-2 border-neon-blue' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-            <Icon size={20} />
-            <span className="font-medium">{label}</span>
-        </div>
-    </Link>
-);
+const NAV = [
+    { to: '/dashboard', icon: '⬡', label: 'Dashboard', shortcut: 'D' },
+    { to: '/scan', icon: '⊕', label: 'New Scan', shortcut: 'S' },
+    { to: '/alerts', icon: '⚠', label: 'Alerts', shortcut: 'A' },
+    { to: '/live', icon: '◉', label: 'Live Stream', shortcut: 'L' },
+    { to: '/settings', icon: '⚙', label: 'Settings', shortcut: '' },
+];
 
-const MainLayout = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const location = useLocation();
-
-    const navItems = [
-        { icon: LayoutDashboard, label: 'Command Center', path: '/dashboard' },
-        { icon: Image, label: 'Image Scan', path: '/dashboard/scan/image' },
-        { icon: Video, label: 'Video Orchestration', path: '/dashboard/scan/video' },
-        { icon: Activity, label: 'Live Enforcement', path: '/dashboard/scan/live' },
-        { icon: FileText, label: 'Compliance Reports', path: '/dashboard/reports' },
-        { icon: Cpu, label: 'AI Model Registry', path: '/dashboard/models' },
-    ];
+export default function MainLayout() {
+    const [collapsed, setCollapsed] = useState(false);
+    useKeyboardShortcuts();
 
     return (
-        <div className="flex h-screen bg-cyber-black text-white overflow-hidden">
-            {/* Sidebar */}
-            <AnimatePresence mode="wait">
-                {isSidebarOpen && (
-                    <motion.div
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 260, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        className="h-full bg-cyber-gray border-r border-white/10 flex flex-col"
-                    >
-                        <div className="p-6 flex items-center gap-2 border-b border-white/10">
-                            <Shield className="text-neon-blue" size={32} />
-                            <div>
-                                <h1 className="text-xl font-bold tracking-wider">DEEP<span className="text-neon-blue">SHIELD</span></h1>
-                                <p className="text-xs text-gray-500">Threat Intelligence</p>
-                            </div>
-                        </div>
+        <div className='flex h-screen overflow-hidden'
+            style={{ background: 'var(--bg-base)' }}>
 
-                        <nav className="flex-1 p-4 space-y-2 mt-4">
-                            {navItems.map((item) => (
-                                <SidebarItem
-                                    key={item.path}
-                                    {...item}
-                                    active={location.pathname === item.path}
-                                />
-                            ))}
-                        </nav>
+            {/* ── Sidebar ── */}
+            <aside
+                style={{
+                    width: collapsed ? 64 : 220,
+                    background: 'var(--bg-secondary)',
+                    borderRight: '1px solid var(--border)',
+                    transition: 'width 250ms ease',
+                    flexShrink: 0,
+                }}
+                className='flex flex-col py-4'
+            >
+                {/* Logo */}
+                <div className='flex items-center gap-3 px-4 mb-8'>
+                    <div className='w-8 h-8 rounded flex items-center justify-center font-bold text-sm'
+                        style={{ background: 'var(--cyan)', color: '#0A1628' }}>K</div>
+                    {!collapsed && (
+                        <span className='font-bold tracking-wide'
+                            style={{ color: 'var(--cyan)', fontSize: 15 }}>KAVACH-AI</span>
+                    )}
+                </div>
 
-                        <div className="p-4 border-t border-white/10">
-                            <div className="flex items-center gap-3 text-gray-400 text-sm">
-                                <Lock size={16} />
-                                <span>Secure Connection</span>
-                            </div>
-                            <div className="mt-2 text-xs text-gray-600">
-                                v1.0.0 (Beta)
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                {/* Nav Links */}
+                <nav className='flex-1 flex flex-col gap-1 px-2'>
+                    {NAV.map(({ to, icon, label, shortcut }) => (
+                        <NavLink
+                            key={to} to={to}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm
+                 transition-all duration-150 group
+                 ${isActive
+                                    ? 'bg-cyan-900/40 text-cyan-400 font-semibold'
+                                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`
+                            }
+                        >
+                            <span className='text-base w-5 text-center flex-shrink-0'>{icon}</span>
+                            {!collapsed && (
+                                <span className='flex-1'>{label}</span>
+                            )}
+                            {!collapsed && shortcut && (
+                                <kbd className='text-xs px-1.5 py-0.5 rounded opacity-40
+                                group-hover:opacity-70'
+                                    style={{
+                                        background: 'var(--bg-card)',
+                                        border: '1px solid var(--border)',
+                                        color: 'var(--text-muted)'
+                                    }}>
+                                    {shortcut}
+                                </kbd>
+                            )}
+                        </NavLink>
+                    ))}
+                </nav>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 border-b border-white/10 bg-cyber-black/50 backdrop-blur-md flex items-center justify-between px-6">
-                    <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white"
-                    >
-                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
+                {/* Collapse toggle */}
+                <button
+                    onClick={() => setCollapsed(c => !c)}
+                    className='mx-2 mt-2 px-3 py-2 rounded-md text-xs transition-colors
+                     hover:bg-white/5'
+                    style={{ color: 'var(--text-muted)' }}
+                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                    {collapsed ? '→' : '← Collapse'}
+                </button>
+            </aside>
 
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-400">Officer: <span className="text-white">Admin User</span></span>
-                        <div className="w-8 h-8 bg-neon-blue rounded-full flex items-center justify-center text-black font-bold">
-                            A
-                        </div>
-                    </div>
-                </header>
-
-                <main className="flex-1 overflow-auto p-6 relative">
-                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none"></div>
-                    <Outlet />
-                </main>
-            </div>
+            {/* ── Main content ── */}
+            <main className='flex-1 overflow-y-auto'
+                style={{ background: 'var(--bg-primary)' }}>
+                <Outlet />
+            </main>
         </div>
     );
-};
-
-export default MainLayout;
+}

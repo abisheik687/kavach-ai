@@ -1,273 +1,473 @@
 """
-DeepShield AI — Main Training Script
+KAVACH-AI Model Trainer
+=======================
+Fine-tunes any KAVACH-AI model from model_config.yaml.
+
+Features:
+  - HuggingFace + timm model loading
+  - Staged layer freezing with warmup
+  - Mixed precision (AMP) — auto-disabled on CPU
+  - Gradient accumulation + gradient clipping
+  - Cosine annealing LR scheduler with linear warmup
+  - Best-checkpoint saving by val_auc
+  - Early stopping (patience configurable)
+  - Per-epoch: loss, accuracy, AUC-ROC, F1, precision, recall
+  - TensorBoard + optional WandB logging
+  - ONNX export after training
+  - Test-set evaluation with full report
 
 Usage:
-  python training/train.py --model efficientnet_b4 --dataset ff++ --epochs 20
-
-Supports:
-  - Transfer learning from ImageNet pretrained (timm)
-  - Mixed precision training (AMP) for faster GPU training
-  - Early stopping on validation AUC
-  - Model checkpointing (best + last)
-  - TensorBoard logging
-  - Cross-validation option
-
-Datasets supported (--dataset flag):
-  ff++     = FaceForensics++ (place in data_dir/ff++/)
-  celeb_df = Celeb-DF v2    (place in data_dir/celeb_df/)
-  dfdc     = DFDC            (place in data_dir/dfdc/)
-  wild     = WildDeepfake   (place in data_dir/wild/)
-  all      = Unified (all datasets merged)
+  python training/train.py --model vit_primary
+  python training/train.py --model efficientnet --epochs 20 --batch_size 16
 """
-
-import os
-import sys
 import argparse
 import json
+import logging
+import os
+import random
+import sys
 import time
 from pathlib import Path
-from datetime import datetime
 
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-from torch.utils.data import DataLoader, random_split
+from torch.utils.tensorboard import SummaryWriter
+from sklearn.metrics import (roc_auc_score, f1_score,
+                              precision_score, recall_score,
+                              classification_report)
+import yaml
 
-try:
-    from torch.utils.tensorboard import SummaryWriter
-    TB_AVAILABLE = True
-except ImportError:
-    TB_AVAILABLE = False
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from training.dataset import build_dataloaders
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from training.datasets.unified_dataset import UnifiedDeepfakeDataset
-from training.models.efficientnet_deepfake import EfficientNetDeepfake
-from training.models.xception_deepfake   import XceptionDeepfake
-from training.evaluate                   import compute_metrics
+log = logging.getLogger('kavach.train')
 
 
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="DeepShield AI Training Pipeline")
-    p.add_argument("--model",         default="efficientnet_b4",
-                   choices=["efficientnet_b4", "efficientnet_b0", "xception", "vit_b16", "mesonet4"])
-    p.add_argument("--dataset",       default="ff++",
-                   choices=["ff++", "celeb_df", "dfdc", "wild", "all"])
-    p.add_argument("--data_dir",      default="./data/datasets")
-    p.add_argument("--epochs",        type=int,   default=20)
-    p.add_argument("--batch_size",    type=int,   default=16)
-    p.add_argument("--learning_rate", type=float, default=1e-4)
-    p.add_argument("--weight_decay",  type=float, default=1e-4)
-    p.add_argument("--val_split",     type=float, default=0.15)
-    p.add_argument("--patience",      type=int,   default=5,   help="Early stopping patience")
-    p.add_argument("--image_size",    type=int,   default=224)
-    p.add_argument("--workers",       type=int,   default=4)
-    p.add_argument("--output_dir",    default="./models")
-    p.add_argument("--resume",        default=None, help="Path to checkpoint to resume from")
-    p.add_argument("--amp",           action="store_true", default=True, help="Mixed precision training")
-    p.add_argument("--no_amp",        dest="amp", action="store_false")
-    p.add_argument("--seed",          type=int,   default=42)
-    return p.parse_args()
-
-
-def set_seed(seed: int):
-    import random, numpy as np
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+# ── Reproducibility ────────────────────────────────────────────────
+def set_seed(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark     = False
 
 
-def build_model(name: str) -> nn.Module:
-    if name.startswith("efficientnet"):
-        return EfficientNetDeepfake(variant=name, num_classes=2, pretrained=True)
-    elif name == "xception":
-        return XceptionDeepfake(num_classes=2, pretrained=True)
+# ── Model loading ──────────────────────────────────────────────────
+def load_model(cfg: dict, num_classes: int, device: str) -> nn.Module:
+    """Load model from HuggingFace hub or timm depending on cfg['backbone']."""
+    backbone = cfg['backbone']
+
+    if backbone == 'hf':
+        from transformers import AutoModelForImageClassification
+        log.info(f"Loading HF model: {cfg['hf_model_id']}")
+        model = AutoModelForImageClassification.from_pretrained(
+            cfg['hf_model_id'],
+            num_labels=num_classes,
+            ignore_mismatched_sizes=True,
+        )
+        return model.to(device)
+
+    elif backbone == 'timm':
+        import timm
+        timm_id  = cfg['timm_model_id']
+        pretrained = cfg.get('pretrained', True)
+        log.info(f'Loading timm model: {timm_id}  pretrained={pretrained}')
+        model = timm.create_model(
+            timm_id,
+            pretrained=pretrained,
+            num_classes=num_classes,
+            drop_rate=cfg.get('dropout', 0.0),
+        )
+        return model.to(device)
+
     else:
-        # Use model_zoo for other architectures
-        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-        from backend.detection.model_zoo import get_model
-        return get_model(name, pretrained=True)
+        raise ValueError(f"Unknown backbone: {backbone}. Use 'hf' or 'timm'.")
 
 
-def train_epoch(model, loader, optimizer, criterion, scaler, device, amp=True):
-    model.train()
-    total_loss = 0.0
-    correct    = 0
-    total      = 0
+# ── Layer freezing ─────────────────────────────────────────────────
+def apply_freeze_strategy(model: nn.Module, strategy: str,
+                           backbone: str) -> None:
+    """
+    Freeze model layers according to strategy.
+    Called at warmup start; reversed at warmup end.
+    """
+    if strategy == 'none':
+        return
 
-    for batch_idx, (images, labels) in enumerate(loader):
+    if strategy == 'staged':
+        # Freeze everything except the classifier head
+        for name, param in model.named_parameters():
+            is_head = any(k in name for k in
+                          ['classifier', 'head', 'fc', 'last_linear'])
+            param.requires_grad = is_head
+        log.info('Freeze: all layers except classifier head')
+        return
+
+    if strategy == 'head_plus_last2' and backbone == 'hf':
+        # ViT: freeze all except classifier + last 2 encoder blocks
+        for name, param in model.named_parameters():
+            is_head   = 'classifier' in name
+            is_last2  = any(f'encoder.layer.{i}' in name
+                            for i in [10, 11])
+            param.requires_grad = is_head or is_last2
+        log.info('Freeze: ViT all except head + encoder layers 10,11')
+        return
+
+    if strategy == 'head_plus_last1' and backbone == 'hf':
+        for name, param in model.named_parameters():
+            is_head  = 'classifier' in name
+            is_last1 = 'encoder.layer.11' in name
+            param.requires_grad = is_head or is_last1
+        log.info('Freeze: ViT all except head + encoder layer 11')
+        return
+
+    log.warning(f'Unknown freeze strategy: {strategy} — no freezing applied')
+
+
+def unfreeze_all(model: nn.Module) -> None:
+    """Unfreeze all parameters after warmup epochs."""
+    for param in model.parameters():
+        param.requires_grad = True
+    log.info('All layers unfrozen — full fine-tuning begins')
+
+
+# ── Scheduler ──────────────────────────────────────────────────────
+def build_scheduler(optimizer, cfg: dict, n_batches: int):
+    """Cosine annealing with linear warmup."""
+    from torch.optim.lr_scheduler import LambdaLR
+    warmup_steps = cfg.get('warmup_epochs', 3) * n_batches
+    total_steps  = cfg.get('epochs', 30) * n_batches
+
+    def lr_lambda(step: int) -> float:
+        if step < warmup_steps:
+            return step / max(1, warmup_steps)
+        progress = (step - warmup_steps) / max(1, total_steps - warmup_steps)
+        return max(0.0, 0.5 * (1.0 + np.cos(np.pi * progress)))
+
+    return LambdaLR(optimizer, lr_lambda)
+
+
+# ── Loss ───────────────────────────────────────────────────────────
+def build_criterion(label_smoothing: float = 0.0) -> nn.Module:
+    return nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+
+
+# ── One epoch ──────────────────────────────────────────────────────
+def run_epoch(
+    model, loader, criterion, optimizer, scaler,
+    scheduler, device, cfg, is_train: bool,
+) -> dict:
+    model.train() if is_train else model.eval()
+    amp_enabled = cfg.get('amp_enabled', True) and device.startswith('cuda')
+    grad_accum  = cfg.get('grad_accumulation', 1)
+    grad_clip   = cfg.get('grad_clip', 1.0)
+    backbone    = cfg.get('backbone', 'timm')
+
+    total_loss, n_correct, n_total = 0.0, 0, 0
+    all_probs, all_labels = [], []
+
+    if is_train:
+        optimizer.zero_grad()
+
+    for step, (images, labels) in enumerate(loader):
         images = images.to(device, non_blocking=True)
         labels = labels.to(device, non_blocking=True)
 
-        optimizer.zero_grad(set_to_none=True)
+        with autocast(enabled=amp_enabled):
+            if backbone == 'hf':
+                outputs = model(pixel_values=images)
+                logits  = outputs.logits
+            else:
+                logits = model(images)
+            loss = criterion(logits, labels) / grad_accum
 
-        with autocast(enabled=amp):
-            logits = model(images)
-            loss   = criterion(logits, labels)
-
-        if amp:
+        if is_train:
             scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            loss.backward()
-            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            if (step + 1) % grad_accum == 0:
+                scaler.unscale_(optimizer)
+                nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
+                if scheduler:
+                    scheduler.step()
 
-        total_loss += loss.item() * images.size(0)
-        preds       = logits.argmax(dim=1)
-        correct    += (preds == labels).sum().item()
-        total      += images.size(0)
-
-        if batch_idx % 50 == 0:
-            print(f"  Batch {batch_idx}/{len(loader)}  loss={loss.item():.4f}", flush=True)
-
-    return total_loss / total, correct / total
-
-
-def val_epoch(model, loader, criterion, device):
-    model.eval()
-    total_loss = 0.0
-    all_probs  = []
-    all_labels = []
-
-    with torch.no_grad():
-        for images, labels in loader:
-            images = images.to(device, non_blocking=True)
-            labels = labels.to(device, non_blocking=True)
-            logits = model(images)
-            loss   = criterion(logits, labels)
-            total_loss += loss.item() * images.size(0)
-            probs = torch.softmax(logits, dim=1)[:, 1].cpu().numpy()
-            all_probs.extend(probs)
+        # Metrics accumulation
+        with torch.no_grad():
+            probs = torch.softmax(logits.float(), dim=1)[:, 1]
+            preds = logits.argmax(dim=1)
+            n_correct  += (preds == labels).sum().item()
+            n_total    += labels.size(0)
+            total_loss += loss.item() * grad_accum * labels.size(0)
+            all_probs.extend(probs.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
-    metrics = compute_metrics(all_labels, all_probs)
-    return total_loss / len(loader.dataset), metrics
+    all_probs  = np.array(all_probs)
+    all_labels = np.array(all_labels)
+    all_preds  = (all_probs >= 0.5).astype(int)
+
+    return {
+        'loss':      total_loss / n_total,
+        'accuracy':  n_correct  / n_total,
+        'auc':       roc_auc_score(all_labels, all_probs),
+        'f1':        f1_score(all_labels, all_preds, zero_division=0),
+        'precision': precision_score(all_labels, all_preds, zero_division=0),
+        'recall':    recall_score(all_labels, all_preds, zero_division=0),
+    }
 
 
-def main():
-    args   = parse_args()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    set_seed(args.seed)
+# ── Main training loop ─────────────────────────────────────────────
+def train(cfg_path: str, model_key: str, overrides: dict) -> Path:
+    """
+    Main entry point. Loads config, trains model, saves checkpoint.
+    Returns path to best checkpoint file.
+    """
+    # Load config
+    with open(cfg_path) as f:
+        full_cfg = yaml.safe_load(f)
+    shared = full_cfg.get('shared', {})
+    cfg    = {**shared, **full_cfg[model_key], **overrides}
 
-    print(f"\n{'='*60}")
-    print(f" DeepShield AI — Training Pipeline")
-    print(f" Model:   {args.model}")
-    print(f" Dataset: {args.dataset}")
-    print(f" Device:  {device}")
-    print(f" AMP:     {args.amp and torch.cuda.is_available()}")
-    print(f"{'='*60}\n")
+    # Setup
+    set_seed(cfg.get('seed', 42))
+    device     = 'cuda' if torch.cuda.is_available() else 'cpu'
+    amp_enabled = cfg.get('amp_enabled', True) and device == 'cuda'
 
-    # ── Dataset ────────────────────────────────────────────────────────────────
-    full_dataset = UnifiedDeepfakeDataset(
-        data_dir   = args.data_dir,
-        datasets   = [args.dataset] if args.dataset != "all" else ["ff++", "celeb_df", "wild"],
-        image_size = args.image_size,
-        augment    = True,
+    ckpt_dir = Path(cfg['checkpoint_dir']) / cfg['model_name']
+    log_dir  = Path(cfg['log_dir'])  / cfg['model_name']
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(message)s',
+        handlers=[logging.StreamHandler(),
+                  logging.FileHandler(log_dir / 'train.log')],
+    )
+    log.info(f'Training {model_key} on {device}')
+    log.info(f'Config: {json.dumps(cfg, default=str, indent=2)}')
+
+    # TensorBoard
+    writer = SummaryWriter(log_dir=str(log_dir))
+
+    # WandB (optional)
+    wandb_run = None
+    if cfg.get('wandb_enabled') and os.environ.get('WANDB_API_KEY'):
+        import wandb
+        wandb_run = wandb.init(
+            project=cfg.get('wandb_project', 'kavach-ai'),
+            name=cfg['model_name'],
+            config=cfg,
+        )
+
+    # Data
+    loaders = build_dataloaders(
+        cfg['manifest_path'],
+        batch_size=cfg.get('batch_size', 32),
+        num_workers=cfg.get('num_workers', 4),
+        balanced_sampling=True,
     )
 
-    val_size   = int(len(full_dataset) * args.val_split)
-    train_size = len(full_dataset) - val_size
-    train_ds, val_ds = random_split(full_dataset, [train_size, val_size],
-                                    generator=torch.Generator().manual_seed(args.seed))
+    # Model
+    model = load_model(cfg, num_classes=cfg.get('num_classes', 2), device=device)
 
-    val_ds.dataset.augment = False  # no augmentation during validation
+    # Freeze strategy for warmup
+    apply_freeze_strategy(model,
+                          cfg.get('freeze_strategy', 'none'),
+                          cfg.get('backbone', 'timm'))
 
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,
-                              num_workers=args.workers, pin_memory=True)
-    val_loader   = DataLoader(val_ds,   batch_size=args.batch_size, shuffle=False,
-                              num_workers=args.workers, pin_memory=True)
+    # Optimizer: separate LR for head vs backbone
+    head_params     = [p for n,p in model.named_parameters()
+                       if p.requires_grad and any(
+                           k in n for k in ['classifier','head','fc','last_linear']
+                       )]
+    backbone_params = [p for n,p in model.named_parameters()
+                       if p.requires_grad and not any(
+                           k in n for k in ['classifier','head','fc','last_linear']
+                       )]
+    optimizer = torch.optim.AdamW([
+        {'params': head_params,     'lr': cfg.get('head_lr', 1e-3)},
+        {'params': backbone_params, 'lr': cfg.get('backbone_lr', 1e-5)},
+    ], weight_decay=cfg.get('weight_decay', 1e-4))
 
-    print(f"Train samples: {train_size}  |  Val samples: {val_size}")
-    print(f"Steps/epoch:   {len(train_loader)}")
+    scaler    = GradScaler(enabled=amp_enabled)
+    criterion = build_criterion(cfg.get('label_smoothing', 0.0))
+    scheduler = build_scheduler(optimizer, cfg, len(loaders['train']))
 
-    # ── Model ──────────────────────────────────────────────────────────────────
-    model = build_model(args.model).to(device)
+    # Training state
+    best_auc    = 0.0
+    best_ckpt   = None
+    patience    = cfg.get('early_stop_patience', 5)
+    no_improve  = 0
+    epochs      = cfg.get('epochs', 30)
+    warmup_ep   = cfg.get('warmup_epochs', 3)
 
-    if args.resume:
-        state = torch.load(args.resume, map_location=device)
-        model.load_state_dict(state.get("model_state_dict", state), strict=False)
-        print(f"Resumed from: {args.resume}")
-
-    # ── Optimiser + Scheduler ──────────────────────────────────────────────────
-    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-6)
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
-    scaler    = GradScaler(enabled=args.amp and torch.cuda.is_available())
-
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    tb_writer = SummaryWriter(f"runs/{args.model}_{args.dataset}_{datetime.now():%Y%m%d_%H%M}") \
-                if TB_AVAILABLE else None
-
-    # ── Training loop ──────────────────────────────────────────────────────────
-    best_auc       = 0.0
-    patience_count = 0
-    history        = []
-
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(1, epochs + 1):
         t0 = time.time()
 
-        train_loss, train_acc = train_epoch(model, train_loader, optimizer, criterion, scaler,
-                                            device, amp=args.amp and torch.cuda.is_available())
-        val_loss, val_metrics  = val_epoch(model, val_loader, criterion, device)
-        scheduler.step()
+        # Unfreeze backbone after warmup
+        if epoch == warmup_ep + 1:
+            unfreeze_all(model)
+            log.info(f'Epoch {epoch}: backbone unfrozen')
+
+        # Train
+        train_metrics = run_epoch(
+            model, loaders['train'], criterion, optimizer,
+            scaler, scheduler, device, cfg, is_train=True,
+        )
+
+        # Validate
+        with torch.no_grad():
+            val_metrics = run_epoch(
+                model, loaders['val'], criterion, optimizer,
+                scaler, None, device, cfg, is_train=False,
+            )
 
         elapsed = time.time() - t0
-        auc     = val_metrics["auc"]
-        f1      = val_metrics["f1"]
+        log.info(
+            f'Epoch {epoch:>3}/{epochs}  '
+            f'train_loss={train_metrics["loss"]:.4f}  '
+            f'val_auc={val_metrics["auc"]:.4f}  '
+            f'val_acc={val_metrics["accuracy"]:.4f}  '
+            f'({elapsed:.0f}s)'
+        )
 
-        print(f"Epoch {epoch}/{args.epochs} | "
-              f"loss={train_loss:.4f} | val_auc={auc:.4f} | val_f1={f1:.4f} | {elapsed:.0f}s",
-              flush=True)
+        # TensorBoard logging
+        for phase, metrics in [('train', train_metrics), ('val', val_metrics)]:
+            for k, v in metrics.items():
+                writer.add_scalar(f'{phase}/{k}', v, epoch)
+        writer.add_scalar('lr/head',     optimizer.param_groups[0]['lr'], epoch)
+        writer.add_scalar('lr/backbone', optimizer.param_groups[1]['lr'], epoch)
 
-        if tb_writer:
-            tb_writer.add_scalar("Loss/train",  train_loss, epoch)
-            tb_writer.add_scalar("Loss/val",    val_loss,   epoch)
-            tb_writer.add_scalar("AUC/val",     auc,        epoch)
-            tb_writer.add_scalar("F1/val",      f1,         epoch)
-
-        history.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss,
-                        "auc": auc, "f1": f1})
-
-        # Save last checkpoint
-        last_path = output_dir / f"{args.model}_last.pth"
-        torch.save({
-            "epoch": epoch, "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "val_auc": auc, "history": history,
-        }, last_path)
+        # WandB logging
+        if wandb_run:
+            wandb_run.log({
+                **{f'train_{k}': v for k,v in train_metrics.items()},
+                **{f'val_{k}':   v for k,v in val_metrics.items()},
+                'epoch': epoch,
+            })
 
         # Save best checkpoint
-        if auc > best_auc:
-            best_auc = auc
-            patience_count = 0
-            best_path = output_dir / f"{args.model}_deepfake.pth"
-            torch.save(model.state_dict(), best_path)
-            print(f"  ★ New best AUC={auc:.4f} — saved to {best_path}")
+        val_auc = val_metrics['auc']
+        if best_ckpt is None or val_auc > best_auc:
+            best_auc  = val_auc
+            best_ckpt = ckpt_dir / f'{cfg["model_name"]}_best_auc{val_auc:.4f}.pt'
+            torch.save({
+                'epoch':       epoch,
+                'model_state': model.state_dict(),
+                'optimizer':   optimizer.state_dict(),
+                'val_auc':     val_auc,
+                'cfg':         cfg,
+            }, best_ckpt)
+            log.info(f'  ✓ Best checkpoint saved: {best_ckpt.name}')
+            no_improve = 0
         else:
-            patience_count += 1
-            if patience_count >= args.patience:
-                print(f"\nEarly stopping after {epoch} epochs (patience={args.patience})")
+            no_improve += 1
+            if no_improve >= patience:
+                log.info(f'Early stopping: no improvement for {patience} epochs')
                 break
 
-    # Save history
-    (output_dir / f"{args.model}_history.json").write_text(json.dumps(history, indent=2))
+    writer.close()
 
-    print(f"\n{'='*60}")
-    print(f" Training complete! Best AUC = {best_auc:.4f}")
-    print(f" Weights saved to: {output_dir}/{args.model}_deepfake.pth")
-    print(f"{'='*60}")
+    # ── Test evaluation ──────────────────────────────────────────────
+    log.info('Loading best checkpoint for test evaluation...')
+    ckpt = torch.load(best_ckpt, map_location=device)
+    model.load_state_dict(ckpt['model_state'])
 
-    if tb_writer:
-        tb_writer.close()
+    with torch.no_grad():
+        test_metrics = run_epoch(
+            model, loaders['test'], criterion, optimizer,
+            scaler, None, device, cfg, is_train=False,
+        )
+
+    log.info('=== TEST SET RESULTS ===')
+    for k, v in test_metrics.items():
+        log.info(f'  {k:<12}: {v:.4f}')
+
+    # Save results JSON
+    results_path = ckpt_dir / f'{cfg["model_name"]}_test_results.json'
+    with open(results_path, 'w') as f:
+        json.dump({'test': test_metrics, 'best_val_auc': best_auc,
+                   'model': cfg['model_name']}, f, indent=2)
+
+    # ── ONNX export ──────────────────────────────────────────────────
+    onnx_path = ckpt_dir / f'{cfg["model_name"]}.onnx'
+    export_onnx(model, cfg, onnx_path, device)
+
+    if wandb_run:
+        wandb_run.log({f'test_{k}': v for k, v in test_metrics.items()})
+        wandb_run.finish()
+
+    log.info(f'Training complete. Best val AUC: {best_auc:.4f}')
+    log.info(f'Checkpoint: {best_ckpt}')
+    log.info(f'ONNX model: {onnx_path}')
+    return best_ckpt
 
 
-if __name__ == "__main__":
+# ── ONNX export ────────────────────────────────────────────────────
+def export_onnx(model: nn.Module, cfg: dict,
+                out_path: Path, device: str) -> None:
+    """Export model to ONNX for fast CPU/GPU inference."""
+    model.eval()
+    img_size  = cfg.get('img_size', 224)
+    backbone  = cfg.get('backbone', 'timm')
+    dummy     = torch.randn(1, 3, img_size, img_size).to(device)
+
+    try:
+        if backbone == 'hf':
+            # HF models need pixel_values kwarg wrapper
+            class HFWrapper(nn.Module):
+                def __init__(self, m): super().__init__(); self.m = m
+                def forward(self, x): return self.m(pixel_values=x).logits
+            export_model = HFWrapper(model)
+        else:
+            export_model = model
+
+        torch.onnx.export(
+            export_model, dummy, str(out_path),
+            input_names=['input'],
+            output_names=['logits'],
+            dynamic_axes={'input': {0: 'batch_size'},
+                          'logits': {0: 'batch_size'}},
+            opset_version=17,
+            do_constant_folding=True,
+        )
+        log.info(f'ONNX export: {out_path}')
+        # Verify
+        import onnx
+        onnx.checker.check_model(str(out_path))
+        log.info('ONNX model check: PASSED')
+    except Exception as e:
+        log.warning(f'ONNX export failed: {e} — skipping')
+
+
+# ── CLI ────────────────────────────────────────────────────────────
+def main():
+    parser = argparse.ArgumentParser(description='KAVACH-AI Model Trainer')
+    parser.add_argument('--model',      required=True,
+                        choices=['vit_primary','vit_secondary','efficientnet',
+                                 'xception','convnext'],
+                        help='Model key from model_config.yaml')
+    parser.add_argument('--config',     default='training/model_config.yaml')
+    parser.add_argument('--epochs',     type=int,   default=None)
+    parser.add_argument('--batch_size', type=int,   default=None)
+    parser.add_argument('--lr',         type=float, default=None)
+    parser.add_argument('--device',     default=None,
+                        choices=['cpu','cuda'])
+    args = parser.parse_args()
+
+    overrides = {k: v for k, v in {
+        'epochs':     args.epochs,
+        'batch_size': args.batch_size,
+        'head_lr':    args.lr,
+    }.items() if v is not None}
+
+    train(args.config, args.model, overrides)
+
+
+if __name__ == '__main__':
     main()

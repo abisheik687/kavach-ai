@@ -99,15 +99,33 @@ app = FastAPI(
 # MIDDLEWARE
 # ============================================
 
-# CORS — allow all origins so Chrome extension content scripts can reach the backend
-# IMPORTANT: allow_credentials MUST be False when allow_origins=["*"] (CORS spec)
-# The frontend uses JWT in Authorization header (not cookies), so this is safe.
+from fastapi.middleware.cors import CORSMiddleware
+from backend.config import settings
+
+def _parse_origins(raw: str) -> list[str]:
+    """
+    Parse a comma-separated ALLOWED_ORIGINS string into a clean list.
+    """
+    return [o.strip() for o in raw.split(",") if o.strip()]
+
+allowed_origins = _parse_origins(settings.ALLOWED_ORIGINS)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Request-ID",
+        "Accept",
+    ],
+    expose_headers=[
+        "Content-Disposition",
+        "X-Evidence-Alert-ID",
+        "X-Export-Timestamp",
+    ],
 )
 
 
@@ -115,7 +133,10 @@ app.add_middleware(
 # INCLUDE ROUTERS
 # ============================================
 
+from backend.api.health import health_router
+
 app.include_router(auth_router)
+app.include_router(health_router)
 app.include_router(alerts.router,      prefix="/api/alerts",      tags=["Alerts"])
 # ── DeepShield AI — Config and Models ────────────────────────────────────────
 app.include_router(models_api.router,  prefix="/api/models",      tags=["Models"])

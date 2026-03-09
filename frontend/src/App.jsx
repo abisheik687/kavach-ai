@@ -3,14 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import MainLayout from './layout/MainLayout';
 import HomePage from './pages/HomePage';
-import ImageScan from './pages/ImageScan';
-import VideoScan from './pages/VideoScan';
-import LiveScan from './pages/LiveScan';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-import MonitorPage from './pages/MonitorPage';
-import ReportsPage from './pages/ReportsPage';
-import ModelsPage from './pages/ModelsPage';
+import ScanPage from './pages/ScanPage';
+import AlertsPage from './pages/AlertsPage';
+import ResultsPage from './pages/ResultsPage';
+import LiveStreamPage from './pages/LiveStreamPage';
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useAuth();
@@ -25,18 +23,17 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={
+          <Route path="/" element={
             <ProtectedRoute>
               <MainLayout />
             </ProtectedRoute>
           }>
-            <Route index element={<Dashboard />} />
-            <Route path="scan/image" element={<ImageScan />} />
-            <Route path="scan/video" element={<VideoScan />} />
-            <Route path="scan/live" element={<LiveScan />} />
-            <Route path="monitor" element={<MonitorPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="models" element={<ModelsPage />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="scan" element={<ScanPage />} />
+            <Route path="alerts" element={<AlertsPage />} />
+            <Route path="alerts/:alertId" element={<ResultsPage />} />
+            <Route path="live" element={<LiveStreamPage />} />
+            {/* Catch-all explicitly wrapped so it sits inside layout */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>

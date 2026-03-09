@@ -82,14 +82,59 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Temporary endpoint to register admin (Delete in prod or secure)
-@auth_router.post("/register")
-async def register(email: str, password: str, db: Session = Depends(get_db)):
+from backend.config import settings
+import logging
+logger = logging.getLogger(__name__)
+
+@auth_router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new admin user",
+    description="Only available when REGISTER_ENABLED=true in environment.",
+)
+async def register(
+    email: str, password: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Create a new user account.
+    Gated by REGISTER_ENABLED environment variable.
+    Set REGISTER_ENABLED=true only during initial system setup.
+    This endpoint should be disabled (REGISTER_ENABLED=false) in production.
+    """
+    if not settings.REGISTER_ENABLED:
+        logger.warning(
+            "Registration attempt blocked: REGISTER_ENABLED is false. "
+            "Set REGISTER_ENABLED=true in .env to allow registration."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": "registration_disabled",
+                "message": "Registration is disabled in this environment.",
+                "hint": "Contact your system administrator.",
+            },
+        )
+
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": "email_taken",
+                "message": f"An account with {email} already exists.",
+            },
+        )
+
     hashed = get_password_hash(password)
-    user = User(email=email, hashed_password=hashed, role="admin")
-    try:
-        db.add(user)
-        db.commit()
-    except:
-        raise HTTPException(status_code=400, detail="User already exists")
-    return {"status": "User created"}
+    user = User(
+        email=email,
+        hashed_password=hashed,
+        role="admin",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    logger.info(f"New admin account created: {email}")
+    return {"status": "User created", "email": email}

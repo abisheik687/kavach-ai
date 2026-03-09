@@ -1,0 +1,43 @@
+:root {
+  /* Backgrounds */
+  --bg-base:        #060E1A;   /* outermost shell */
+  --bg-primary:     #0A1628;   /* page background */
+  --bg-secondary:   #0D1F3C;   /* sidebar, panels */
+  --bg-card:        #112240;   /* card surfaces */
+  --bg-card-hover:  #162A4E;   /* card hover state */
+  --bg-input:       #0A1628;   /* form inputs */
+
+  /* Brand */
+  --cyan:           #00B4D8;
+  --cyan-dim:       #0090AD;
+  --cyan-glow:      rgba(0,180,216,0.18);
+
+  /* Verdict */
+  --verdict-real:   #2DC653;
+  --verdict-fake:   #E63946;
+  --verdict-medium: #F4A261;
+  --verdict-unknown:#8899AA;
+
+  /* Text */
+  --text-primary:   #E8F1FF;
+  --text-secondary: #A0B4CC;
+  --text-muted:     #6B7E94;
+  --text-disabled:  #3D5166;
+
+  /* Borders */
+  --border:         rgba(255,255,255,0.08);
+  --border-active:  rgba(0,180,216,0.45);
+
+  /* Shadows */
+  --shadow-card:    0 4px 24px rgba(0,0,0,0.45);
+  --shadow-glow:    0 0 24px rgba(0,180,216,0.22);
+
+  /* Radius */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  /* Transitions */
+  --transition: 150ms ease;
+}

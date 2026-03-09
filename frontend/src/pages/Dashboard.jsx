@@ -1,134 +1,172 @@
 import { useState, useEffect } from 'react';
-import { detectionsAPI } from '../services/api';
-import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import { VerdictBadge } from '../components/VerdictBadge';
+import { SkeletonRow } from '../components/SkeletonRow';
 
-const StatCard = ({ title, value, subtext, icon: Icon, color }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-cyber-gray border border-white/5 p-6 rounded-xl relative overflow-hidden group hover:border-white/10 transition-all"
-    >
-        <div className={`absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity text-${color}`}>
-            <Icon size={48} />
-        </div>
-        <div className="relative z-10">
-            <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider">{title}</h3>
-            <div className="text-3xl font-bold mt-2 text-white">{value}</div>
-            <p className={`text-xs mt-2 text-${color}`}>{subtext}</p>
-        </div>
-        <div className={`absolute bottom-0 left-0 h-1 bg-${color} w-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left`}></div>
-    </motion.div>
-);
+const THREAT_LEVELS = {
+    LOW: { color: '#2DC653', bg: '#0d2c18', label: 'LOW RISK' },
+    MEDIUM: { color: '#F4A261', bg: '#2c1f0d', label: 'MEDIUM RISK' },
+    HIGH: { color: '#E63946', bg: '#2c0d10', label: 'HIGH RISK' },
+    CRITICAL: { color: '#E63946', bg: '#2c0d10', label: 'CRITICAL', pulse: true },
+};
 
-const Dashboard = () => {
+function StatCard({ icon, label, value, delta, color }) {
+    return (
+        <div className='rounded-xl p-5 flex flex-col gap-2'
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <div className='flex items-center justify-between'>
+                <span className='text-2xl'>{icon}</span>
+                {delta != null && (
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full
+                           ${delta >= 0 ? 'text-red-400 bg-red-900/30'
+                            : 'text-green-400 bg-green-900/30'}`}>
+                        {delta >= 0 ? '+' : ''}{delta}% today
+                    </span>
+                )}
+            </div>
+            <div className='text-3xl font-bold' style={{ color: color ?? 'var(--text-primary)' }}>
+                {value ?? '—'}
+            </div>
+            <div className='text-xs' style={{ color: 'var(--text-muted)' }}>{label}</div>
+        </div>
+    );
+}
+
+export default function Dashboard() {
+    const navigate = useNavigate();
     const [stats, setStats] = useState(null);
+    const [recent, setRecent] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [threatLevel, setThreatLevel] = useState('LOW');
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await detectionsAPI.getStats();
-                setStats(res);
-            } catch (e) {
-                console.error("Failed to load dashboard stats", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchStats();
+        Promise.all([
+            fetch('/api/v1/stats/summary').then(r => r.json()),
+            fetch('/api/v1/alerts?limit=10&sort=desc').then(r => r.json()),
+        ])
+            .then(([s, r]) => {
+                setStats(s);
+                setRecent(r.items ?? []);
+                // Derive threat level from recent detections
+                const highCount = (r.items ?? []).filter(a => a.severity === 'HIGH').length;
+                if (highCount >= 5) setThreatLevel('CRITICAL');
+                else if (highCount >= 2) setThreatLevel('HIGH');
+                else if (highCount >= 1) setThreatLevel('MEDIUM');
+                else setThreatLevel('LOW');
+            })
+            .catch(() => { })
+            .finally(() => setLoading(false));
     }, []);
 
-    // Create realistic mock data for AreaChart since the endpoint only provides aggregate stats
-    const chartData = [
-        { name: '00:00', scans: Math.max(0, (stats?.total_detections || 0) * 0.1), threats: (stats?.total_alerts || 0) * 0.1 },
-        { name: '04:00', scans: Math.max(0, (stats?.total_detections || 0) * 0.05), threats: 0 },
-        { name: '08:00', scans: Math.max(0, (stats?.total_detections || 0) * 0.15), threats: (stats?.total_alerts || 0) * 0.1 },
-        { name: '12:00', scans: Math.max(0, (stats?.total_detections || 0) * 0.3), threats: (stats?.total_alerts || 0) * 0.4 },
-        { name: '16:00', scans: Math.max(0, (stats?.total_detections || 0) * 0.2), threats: (stats?.total_alerts || 0) * 0.2 },
-        { name: '20:00', scans: Math.max(0, (stats?.total_detections || 0) * 0.15), threats: (stats?.total_alerts || 0) * 0.15 },
-        { name: '23:59', scans: Math.max(0, (stats?.total_detections || 0) * 0.05), threats: (stats?.total_alerts || 0) * 0.05 },
-    ];
-
-    if (loading) return <div className="text-white p-6">Loading statistics...</div>;
+    const tl = THREAT_LEVELS[threatLevel];
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Command Center</h1>
-                    <p className="text-gray-400 mt-1">System Status: <span className="text-neon-green">OPERATIONAL</span></p>
+        <div className='p-6 max-w-7xl mx-auto'>
+
+            {/* ── Threat level banner ── */}
+            <div className='flex items-center justify-between mb-6 rounded-xl px-5 py-3'
+                style={{ background: tl.bg, border: `1px solid ${tl.color}33` }}>
+                <div className='flex items-center gap-3'>
+                    <div className={`w-3 h-3 rounded-full ${tl.pulse ? 'animate-pulse' : ''}`}
+                        style={{ background: tl.color }} />
+                    <span className='font-bold tracking-widest text-sm'
+                        style={{ color: tl.color }}>THREAT LEVEL: {tl.label}</span>
                 </div>
-                <div className="text-right">
-                    <div className="text-sm text-gray-500">Last Updated</div>
-                    <div className="font-mono text-neon-blue">{new Date().toLocaleTimeString()}</div>
-                </div>
+                <button onClick={() => navigate('/scan')}
+                    className='text-xs px-4 py-1.5 rounded-md font-semibold transition-all
+                           hover:opacity-80'
+                    style={{ background: 'var(--cyan)', color: '#0A1628' }}>
+                    + New Scan
+                </button>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Total Scans"
-                    value={stats?.total_detections || 0}
-                    subtext="Real-time detection count"
-                    icon={Activity}
-                    color="neon-blue"
-                />
-                <StatCard
-                    title="Threats Detected"
-                    value={stats?.total_alerts || 0}
-                    subtext="High Severity Alerts"
-                    icon={AlertTriangle}
-                    color="neon-red"
-                />
-                <StatCard
-                    title="Avg Confidence"
-                    value={`${((stats?.average_confidence || 0) * 100).toFixed(1)}%`}
-                    subtext="System accuracy mean"
-                    icon={Clock}
-                    color="neon-green"
-                />
-                <StatCard
-                    title="System Health"
-                    value="98.5%"
-                    subtext="All systems nominal"
-                    icon={CheckCircle}
-                    color="neon-blue"
-                />
+            {/* ── Stat cards ── */}
+            <div className='grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8'>
+                <StatCard icon='🔍' label='Scans Today'
+                    value={stats?.scans_today} delta={stats?.scans_delta} />
+                <StatCard icon='🎭' label='Deepfakes Detected'
+                    value={stats?.deepfakes_today}
+                    color='var(--verdict-fake)'
+                    delta={stats?.deepfakes_delta} />
+                <StatCard icon='🚨' label='High Risk Alerts'
+                    value={stats?.high_risk_count}
+                    color={stats?.high_risk_count > 0 ? '#E63946' : undefined} />
+                <StatCard icon='⚡' label='Avg Inference (ms)'
+                    value={stats?.avg_inference_ms} />
             </div>
 
-            {/* Charts Section */}
-            <div className="bg-cyber-gray border border-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-white mb-6">Detection Activity (24h)</h3>
-                <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                            <defs>
-                                <linearGradient id="colorScans" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#00f3ff" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#00f3ff" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="colorThreats" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#ff003c" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#ff003c" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                            <XAxis dataKey="name" stroke="#666" />
-                            <YAxis stroke="#666" />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
-                                itemStyle={{ color: '#fff' }}
-                            />
-                            <Area type="monotone" dataKey="scans" stroke="#00f3ff" fillOpacity={1} fill="url(#colorScans)" />
-                            <Area type="monotone" dataKey="threats" stroke="#ff003c" fillOpacity={1} fill="url(#colorThreats)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
+            {/* ── Recent activity table ── */}
+            <div className='rounded-xl overflow-hidden'
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <div className='px-5 py-4 flex items-center justify-between'
+                    style={{ borderBottom: '1px solid var(--border)' }}>
+                    <h2 className='font-semibold text-sm tracking-wide
+                         uppercase' style={{ color: 'var(--text-secondary)' }}>
+                        Recent Activity
+                    </h2>
+                    <button onClick={() => navigate('/alerts')}
+                        className='text-xs hover:underline'
+                        style={{ color: 'var(--cyan)' }}>View all →</button>
                 </div>
+                <table className='w-full'>
+                    <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                            {['Source', 'Verdict', 'Confidence', 'Models', 'Time'].map(h => (
+                                <th key={h} className='px-4 py-3 text-left text-xs font-semibold
+                                        uppercase tracking-wider'
+                                    style={{ color: 'var(--text-muted)' }}>{h}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading
+                            ? Array.from({ length: 5 }).map((_, i) => (
+                                <SkeletonRow key={i} cols={5} />
+                            ))
+                            : recent.length === 0
+                                ? (
+                                    <tr><td colSpan={5} className='px-4 py-12 text-center'>
+                                        <div className='flex flex-col items-center gap-3'>
+                                            <span className='text-4xl'>🔬</span>
+                                            <p style={{ color: 'var(--text-muted)' }}>No scans yet</p>
+                                            <button onClick={() => navigate('/scan')}
+                                                className='text-sm px-4 py-2 rounded-md font-medium'
+                                                style={{ background: 'var(--cyan)', color: '#0A1628' }}>
+                                                Run your first scan
+                                            </button>
+                                        </div>
+                                    </td></tr>
+                                )
+                                : recent.map(alert => (
+                                    <tr key={alert.id}
+                                        onClick={() => navigate(`/alerts/${alert.id}`)}
+                                        className='cursor-pointer transition-colors hover:bg-white/5'
+                                        style={{ borderBottom: '1px solid var(--border)' }}>
+                                        <td className='px-4 py-3 text-sm max-w-xs truncate'
+                                            title={alert.source_url}>
+                                            {alert.source_url ?? 'File upload'}
+                                        </td>
+                                        <td className='px-4 py-3'>
+                                            <VerdictBadge verdict={alert.verdict} size='sm' />
+                                        </td>
+                                        <td className='px-4 py-3 text-sm font-mono'
+                                            style={{ color: 'var(--text-secondary)' }}>
+                                            {alert.confidence ? `${(alert.confidence * 100).toFixed(1)}%` : '—'}
+                                        </td>
+                                        <td className='px-4 py-3 text-sm'
+                                            style={{ color: 'var(--text-muted)' }}>
+                                            {alert.models_used ?? '—'}
+                                        </td>
+                                        <td className='px-4 py-3 text-xs'
+                                            style={{ color: 'var(--text-muted)' }}>
+                                            {new Date(alert.created_at).toLocaleTimeString()}
+                                        </td>
+                                    </tr>
+                                ))
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     );
-};
-
-export default Dashboard;
+}

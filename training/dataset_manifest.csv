@@ -1,0 +1,5 @@
+filepath,label,source,width,height,img_hash,split
+data/smoke/fake/f1.png,1,smoke,224,224,a,train
+data/smoke/fake/f2.png,1,smoke,224,224,b,val
+data/smoke/real/r1.png,0,smoke,224,224,c,train
+data/smoke/real/r2.png,0,smoke,224,224,d,test

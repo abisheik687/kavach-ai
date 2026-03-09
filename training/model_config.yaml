@@ -1,0 +1,93 @@
+# KAVACH-AI Model Training Configuration
+# Override individual values:  python train.py --config model_config.yaml --lr 1e-5
+
+# ── Shared defaults ────────────────────────────────────────────────
+shared:
+  img_size:          224
+  num_classes:       2
+  batch_size:        32          # reduce to 16 if VRAM < 8 GB
+  num_workers:       4
+  epochs:            30
+  warmup_epochs:     3           # freeze backbone, train head only
+  early_stop_patience: 5         # epochs without val_auc improvement
+  amp_enabled:       true        # mixed precision — auto-disabled on CPU
+  grad_accumulation: 2           # effective batch = batch_size * grad_accumulation
+  grad_clip:         1.0         # gradient clipping max norm
+  seed:              42
+  manifest_path:     training/dataset_manifest.csv
+  checkpoint_dir:    training/checkpoints
+  log_dir:           training/logs
+  wandb_enabled:     false       # set to true + WANDB_API_KEY env var
+  wandb_project:     kavach-ai-training
+
+# ── vit_primary: fine-tune HuggingFace ViT ─────────────────────────
+vit_primary:
+  model_name:        vit_primary
+  backbone:          hf                # load from HuggingFace hub
+  hf_model_id:       prithivMLmods/Deepfake-vs-Real-ViT
+  freeze_strategy:   head_plus_last2   # unfreeze classifier + last 2 encoder blocks
+  head_lr:           3.0e-4
+  backbone_lr:       1.0e-5
+  weight_decay:      0.01
+  scheduler:         cosine_warmup
+  label_smoothing:   0.1
+  dropout:           0.1
+
+# ── vit_secondary: fine-tune HuggingFace ViT ───────────────────────
+vit_secondary:
+  model_name:        vit_secondary
+  backbone:          hf
+  hf_model_id:       dima806/deepfake_vs_real_image_detection
+  freeze_strategy:   head_plus_last1
+  head_lr:           2.0e-4
+  backbone_lr:       5.0e-6
+  weight_decay:      0.01
+  scheduler:         cosine_warmup
+  label_smoothing:   0.05
+  dropout:           0.0
+
+# ── efficientnet_b4: full fine-tune from timm ImageNet ─────────────
+efficientnet:
+  model_name:        efficientnet_b4
+  backbone:          timm
+  timm_model_id:     efficientnet_b4
+  pretrained:        true
+  freeze_strategy:   staged           # warmup_epochs frozen, then full unfreeze
+  head_lr:           1.0e-3
+  backbone_lr:       1.0e-4
+  weight_decay:      1.0e-4
+  scheduler:         cosine_warmup
+  label_smoothing:   0.1
+  dropout:           0.3
+  batch_size:        32
+
+# ── xception: full fine-tune from timm ImageNet ─────────────────────
+xception:
+  model_name:        xception
+  backbone:          timm
+  timm_model_id:     xception
+  pretrained:        true
+  freeze_strategy:   staged
+  head_lr:           1.0e-3
+  backbone_lr:       5.0e-5
+  weight_decay:      1.0e-4
+  scheduler:         cosine_warmup
+  label_smoothing:   0.1
+  dropout:           0.3
+  batch_size:        24              # Xception is memory-heavier
+
+# ── convnext_base: recommended new addition ──────────────────────────
+convnext:
+  model_name:        convnext_base
+  backbone:          timm
+  timm_model_id:     convnext_base
+  pretrained:        true
+  pretrained_cfg:    imagenet22k_ft1k  # use 22k init for best transfer
+  freeze_strategy:   staged
+  head_lr:           5.0e-4
+  backbone_lr:       5.0e-5
+  weight_decay:      0.05
+  scheduler:         cosine_warmup
+  label_smoothing:   0.1
+  dropout:           0.0
+  batch_size:        32

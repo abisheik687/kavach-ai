@@ -26,6 +26,76 @@ from typing import Optional, Tuple
 import torch
 from PIL import Image
 from loguru import logger
+from backend.config import settings
+
+# Map config attribute → model key
+_LOCAL_PATH_MAP = {
+    'vit_deepfake_primary':   settings.KAVACH_MODEL_PRIMARY_PATH,
+    'vit_deepfake_secondary': settings.KAVACH_MODEL_SECONDARY_PATH,
+    'efficientnet_b4':        settings.KAVACH_MODEL_EFFICIENTNET_PATH,
+    'xception':               settings.KAVACH_MODEL_XCEPTION_PATH,
+}
+
+
+def load_local_checkpoint(model: torch.nn.Module, model_key: str) -> torch.nn.Module:
+    """
+    If a local checkpoint path is configured for model_key, load its
+    state_dict into the model in-place and return it.
+    Silently skips if no path is configured or file does not exist.
+    """
+    local_path = _LOCAL_PATH_MAP.get(model_key)
+    if not local_path:
+        return model  # use HF hub weights
+
+    path = Path(local_path)
+    if not path.exists():
+        logger.warning(
+            f'[{model_key}] Local checkpoint not found at {path} — '
+            f'falling back to HuggingFace hub.'
+        )
+        return model
+
+    if path.suffix == '.onnx':
+        logger.info(f'[{model_key}] ONNX checkpoint detected — '
+                 f'load via ONNXRuntimeModel, not PyTorch.')
+        return model  # ONNX models are handled separately in inference
+
+    try:
+        ckpt = torch.load(path, map_location='cpu')
+        state = ckpt.get('model_state', ckpt)  # support both raw and wrapped
+        missing, unexpected = model.load_state_dict(state, strict=False)
+        if missing:
+            logger.warning(f'[{model_key}] Missing keys: {missing[:5]}')
+        if unexpected:
+            logger.warning(f'[{model_key}] Unexpected keys: {unexpected[:5]}')
+        logger.info(f'[{model_key}] Loaded local checkpoint: {path}')
+    except Exception as e:
+        logger.error(f'[{model_key}] Failed to load checkpoint: {e} — using HF weights')
+
+    return model
+
+
+def load_onnx_model(model_key: str):
+    """
+    Load an ONNX model for fast inference if path ends in .onnx.
+    Returns an onnxruntime.InferenceSession or None.
+    """
+    local_path = _LOCAL_PATH_MAP.get(model_key)
+    if not local_path or not local_path.endswith('.onnx'):
+        return None
+    path = Path(local_path)
+    if not path.exists():
+        return None
+    try:
+        import onnxruntime as ort
+        providers = (['CUDAExecutionProvider'] if torch.cuda.is_available()
+                     else ['CPUExecutionProvider'])
+        session = ort.InferenceSession(str(path), providers=providers)
+        logger.info(f'[{model_key}] ONNX runtime loaded: {path}')
+        return session
+    except Exception as e:
+        logger.warning(f'[{model_key}] ONNX load failed: {e}')
+        return None
 
 # ─── Device ───────────────────────────────────────────────────────────────────
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -112,6 +182,8 @@ def load_hf_model(name: str) -> tuple:
                 model=cfg["repo_id"],
                 device=0 if torch.cuda.is_available() else -1,
             )
+            if hasattr(pipe, 'model'):
+                pipe.model = load_local_checkpoint(pipe.model, name)
             _cache[name] = (pipe, None)
             logger.success(f"[HFRegistry] '{name}' ready — {cfg['repo_id']}")
         except Exception as e:
@@ -134,6 +206,8 @@ def load_hf_model(name: str) -> tuple:
                 logger.success(f"[HFRegistry] Loaded fine-tuned weights: {weights}")
             else:
                 logger.info(f"[HFRegistry] Using ImageNet weights for {cfg['timm_name']}")
+            
+            model = load_local_checkpoint(model, name)
 
             # Build timm data config for preprocessing
             data_cfg   = timm.data.resolve_model_data_config(model)
