@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
     
     # Initialize database
     logger.info("Initializing database...")
-    init_db()
+    await init_db()
     logger.success("✓ Database initialized")
     
     # Create directories

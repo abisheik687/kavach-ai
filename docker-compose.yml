@@ -102,6 +102,27 @@ services:
     networks:
       - deepshield_net
 
+  # ── PostgreSQL DB ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: deepshield_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=kavach
+      - POSTGRES_PASSWORD=kavach
+      - POSTGRES_DB=kavach
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - deepshield_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U kavach" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── Redis (caching + job queue) ────────────────────────────────
   redis:
     image: redis:7-alpine
@@ -149,3 +170,4 @@ networks:
 volumes:
   kavach_db:
   redis_data:
+  pg_data:

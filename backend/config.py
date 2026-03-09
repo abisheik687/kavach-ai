@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     # ============================================
     # DATABASE
     # ============================================
-    DATABASE_URL: str = "sqlite:///./data/kavach.db"
+    DATABASE_URL: str = "postgresql+asyncpg://kavach:kavach@localhost:5432/kavach"
     
     # ============================================
     # REDIS

@@ -3,21 +3,28 @@ KAVACH-AI Database Models and Setup
 SQLAlchemy ORM for SQLite/PostgreSQL
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, JSON, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, JSON, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from datetime import datetime
 from backend.config import settings
 
-# Create engine
-engine = create_engine(
+# Create async engine
+engine = create_async_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {},
-    echo=settings.DEBUG
+    echo=settings.DEBUG,
+    future=True
 )
 
-# Session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Async Session factory
+SessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False
+)
 
 # Base class for models
 Base = declarative_base()
@@ -219,48 +226,48 @@ class AuditLog(Base):
 # DATABASE INITIALIZATION
 # ============================================
 
-def init_db():
-    """Initialize database tables and seed demo data"""
-    Base.metadata.create_all(bind=engine)
-    seed_demo_user()
+async def init_db():
+    """Initialize database tables and seed demo data asynchronously"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    await seed_demo_user()
 
 
-def seed_demo_user():
+async def seed_demo_user():
     """
     Seed a demo user on first run if no users exist.
     Credentials: demo@kavach.ai / kavach2026
     """
     from passlib.context import CryptContext
+    from sqlalchemy import select
     pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
-    db = SessionLocal()
-    try:
-        existing = db.query(User).filter(User.email == "demo@kavach.ai").first()
-        if not existing:
-            demo_user = User(
-                email="demo@kavach.ai",
-                hashed_password=pwd_context.hash("kavach2026"),
-                full_name="Demo Officer",
-                role="admin",
-                is_active=True,
-            )
-            db.add(demo_user)
-            db.commit()
+    async with SessionLocal() as db:
+        try:
+            result = await db.execute(select(User).filter(User.email == "demo@kavach.ai"))
+            existing = result.scalars().first()
+            if not existing:
+                demo_user = User(
+                    email="demo@kavach.ai",
+                    hashed_password=pwd_context.hash("kavach2026"),
+                    full_name="Demo Officer",
+                    role="admin",
+                    is_active=True,
+                )
+                db.add(demo_user)
+                await db.commit()
+                from loguru import logger
+                logger.success("✓ Demo user seeded: demo@kavach.ai / kavach2026")
+        except Exception as e:
+            await db.rollback()
             from loguru import logger
-            logger.success("✓ Demo user seeded: demo@kavach.ai / kavach2026")
-    except Exception as e:
-        db.rollback()
-        from loguru import logger
-        logger.warning(f"Could not seed demo user: {e}")
-    finally:
-        db.close()
+            logger.warning(f"Could not seed demo user: {e}")
 
 
-
-def get_db():
-    """Dependency for FastAPI to get database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    """Dependency for FastAPI to get async database session"""
+    async with SessionLocal() as db:
+        try:
+            yield db
+        finally:
+            await db.close()

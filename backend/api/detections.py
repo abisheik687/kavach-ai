@@ -5,7 +5,8 @@ Routes consumed by the frontend Dashboard and Reports pages.
 """
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime
@@ -19,24 +20,23 @@ router = APIRouter()
 # ─── 1. Aggregate Statistics (Dashboard) ──────────────────────────────────────
 
 @router.get("/stats/summary")
-async def get_detection_stats(db: Session = Depends(get_db)):
+async def get_detection_stats(db: AsyncSession = Depends(get_db)):
     """
     Aggregate statistics for the dashboard command center.
     Returns total scans, fakes detected, average confidence, and alert count.
     """
     try:
-        total_scans = db.query(func.count(ScanResult.id)).scalar() or 0
-        total_fakes = (
-            db.query(func.count(ScanResult.id))
-            .filter(ScanResult.verdict == "FAKE")
-            .scalar() or 0
-        )
-        avg_confidence = (
-            db.query(func.avg(ScanResult.final_score))
-            .filter(ScanResult.final_score.isnot(None))
-            .scalar()
-        )
-        total_alerts = db.query(func.count(Alert.id)).scalar() or 0
+        total_scans_result = await db.execute(select(func.count(ScanResult.id)))
+        total_scans = total_scans_result.scalar() or 0
+        
+        total_fakes_result = await db.execute(select(func.count(ScanResult.id)).filter(ScanResult.verdict == "FAKE"))
+        total_fakes = total_fakes_result.scalar() or 0
+        
+        avg_conf_result = await db.execute(select(func.avg(ScanResult.final_score)).filter(ScanResult.final_score.isnot(None)))
+        avg_confidence = avg_conf_result.scalar()
+        
+        total_alerts_result = await db.execute(select(func.count(Alert.id)))
+        total_alerts = total_alerts_result.scalar() or 0
 
         return {
             "total_detections": total_scans,
@@ -66,22 +66,24 @@ async def get_detection_history(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     verdict: Optional[str] = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Paginated scan/detection history for the Reports page.
     Optionally filter by verdict: FAKE | REAL | SUSPICIOUS
     """
     try:
-        query = db.query(ScanResult)
+        query = select(ScanResult)
         if verdict:
             query = query.filter(ScanResult.verdict == verdict.upper())
-        results = (
+            
+        result = await db.execute(
             query.order_by(ScanResult.created_at.desc())
             .offset(offset)
             .limit(limit)
-            .all()
         )
+        results = result.scalars().all()
+        
         return [
             {
                 "id": r.id,
@@ -106,23 +108,26 @@ async def get_detection_history(
 # ─── 3. Single Detection Detail ────────────────────────────────────────────────
 
 @router.get("/{detection_id}")
-async def get_detection(detection_id: int, db: Session = Depends(get_db)):
+async def get_detection(detection_id: int, db: AsyncSession = Depends(get_db)):
     """Get full detail for a single scan result by its integer ID."""
-    result = db.query(ScanResult).filter(ScanResult.id == detection_id).first()
-    if not result:
+    result = await db.execute(select(ScanResult).filter(ScanResult.id == detection_id))
+    db_result = result.scalars().first()
+    
+    if not db_result:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail=f"Detection {detection_id} not found")
+        
     return {
-        "id": result.id,
-        "task_id": result.task_id,
-        "filename": result.filename or "Unknown",
-        "status": result.status,
-        "verdict": result.verdict or "PENDING",
-        "confidence": result.final_score or 0.0,
-        "video_score": result.video_score,
-        "audio_score": result.audio_score,
-        "temporal_score": result.temporal_score,
-        "meta_data": result.meta_data,
-        "timestamp": result.created_at.isoformat() if result.created_at else None,
-        "completed_at": result.completed_at.isoformat() if result.completed_at else None,
+        "id": db_result.id,
+        "task_id": db_result.task_id,
+        "filename": db_result.filename or "Unknown",
+        "status": db_result.status,
+        "verdict": db_result.verdict or "PENDING",
+        "confidence": db_result.final_score or 0.0,
+        "video_score": db_result.video_score,
+        "audio_score": db_result.audio_score,
+        "temporal_score": db_result.temporal_score,
+        "meta_data": db_result.meta_data,
+        "timestamp": db_result.created_at.isoformat() if db_result.created_at else None,
+        "completed_at": db_result.completed_at.isoformat() if db_result.completed_at else None,
     }

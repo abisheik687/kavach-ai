@@ -64,14 +64,12 @@ def run_migrations_online() -> None:
 
     """
     # Override url with settings
-    configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    # configuration = config.get_section(config.config_ini_section, {})
+    # configuration["sqlalchemy.url"] = settings.DATABASE_URL
     
-    connectable = engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    # Replace async pg driver with sync pg driver for Alembic
+    sync_url = settings.DATABASE_URL.replace("+asyncpg", "+psycopg2") if "+asyncpg" in settings.DATABASE_URL else settings.DATABASE_URL
+    connectable = create_engine(sync_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(

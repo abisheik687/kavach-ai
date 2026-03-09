@@ -3,14 +3,16 @@ KAVACH-AI Alerts API
 Manage threat alerts and forensic evidence
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlalchemy import and_
 from typing import List, Optional
-from datetime import datetime
+import datetime
+import json
 from loguru import logger
 
-from backend.database import get_db, Alert, EvidenceChain
+from backend.database import get_db, Alert, EvidenceChain, ScanResult
 from backend.schemas import AlertResponse, AlertAcknowledge, EvidenceChainResponse
 from backend.config import settings
 
@@ -22,11 +24,11 @@ async def query_alerts(
     status: Optional[str] = None,
     severity: Optional[str] = None,
     attack_type: Optional[str] = None,
-    start_time: Optional[datetime] = None,
-    end_time: Optional[datetime] = None,
+    start_time: Optional[datetime.datetime] = None,
+    end_time: Optional[datetime.datetime] = None,
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Query alert history with filters.
@@ -39,7 +41,7 @@ async def query_alerts(
     - limit / offset: Pagination
     """
     try:
-        query = db.query(Alert)
+        query = select(Alert)
         
         # Apply filters
         filters = []
@@ -63,11 +65,11 @@ async def query_alerts(
             query = query.filter(and_(*filters))
         
         # Order and paginate
-        alerts = query.order_by(
-            Alert.created_at.desc()
-        ).offset(offset).limit(limit).all()
+        result = await db.execute(
+            query.order_by(Alert.created_at.desc()).offset(offset).limit(limit)
+        )
         
-        return alerts
+        return result.scalars().all()
     
     except Exception as e:
         logger.error(f"Error querying alerts: {e}")
@@ -80,10 +82,11 @@ async def query_alerts(
 @router.get("/{alert_id}", response_model=AlertResponse)
 async def get_alert(
     alert_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get detailed information about a specific alert"""
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    result = await db.execute(select(Alert).filter(Alert.id == alert_id))
+    alert = result.scalars().first()
     
     if not alert:
         raise HTTPException(
@@ -98,14 +101,15 @@ async def get_alert(
 async def acknowledge_alert(
     alert_id: int,
     ack: AlertAcknowledge,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Acknowledge an alert.
     
     This marks the alert as acknowledged and records who acknowledged it.
     """
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    result = await db.execute(select(Alert).filter(Alert.id == alert_id))
+    alert = result.scalars().first()
     
     if not alert:
         raise HTTPException(
@@ -115,7 +119,7 @@ async def acknowledge_alert(
     
     try:
         alert.status = "acknowledged"
-        alert.acknowledged_at = datetime.utcnow()
+        alert.acknowledged_at = datetime.datetime.utcnow()
         alert.acknowledged_by = ack.acknowledged_by
         
         # Add notes to context if provided
@@ -124,15 +128,15 @@ async def acknowledge_alert(
                 alert.context_json = {}
             alert.context_json["acknowledgment_notes"] = ack.notes
         
-        db.commit()
-        db.refresh(alert)
+        await db.commit()
+        await db.refresh(alert)
         
         logger.info(f"Alert {alert_id} acknowledged by {ack.acknowledged_by}")
         
         return alert
     
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         logger.error(f"Error acknowledging alert: {e}")
         raise HTTPException(
             status_code=500,
@@ -143,14 +147,15 @@ async def acknowledge_alert(
 @router.get("/{alert_id}/evidence", response_model=List[EvidenceChainResponse])
 async def get_alert_evidence(
     alert_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get forensic evidence chain for an alert.
     
     Returns the complete Merkle tree evidence chain with cryptographic hashes.
     """
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    result = await db.execute(select(Alert).filter(Alert.id == alert_id))
+    alert = result.scalars().first()
     
     if not alert:
         raise HTTPException(
@@ -159,28 +164,27 @@ async def get_alert_evidence(
         )
     
     # Get evidence chain
-    evidence_chain = db.query(EvidenceChain).filter(
-        EvidenceChain.alert_id == alert_id
-    ).order_by(EvidenceChain.timestamp).all()
-    
-    return evidence_chain
+    chain_result = await db.execute(
+        select(EvidenceChain)
+        .filter(EvidenceChain.alert_id == alert_id)
+        .order_by(EvidenceChain.timestamp)
+    )
+    return chain_result.scalars().all()
 
-import json
-import datetime
-from fastapi.responses import Response
-from backend.database import ScanResult, EvidenceChain
 
 @router.get("/{alert_id}/evidence/export", response_class=Response)
 async def export_alert_evidence(
     alert_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> Response:
     """
     Build and return a downloadable evidence bundle for the given alert.
     The bundle contains: alert metadata, scan result scores per model,
     GradCAM path, and the full evidence chain log.
     """
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    result = await db.execute(select(Alert).filter(Alert.id == alert_id))
+    alert = result.scalars().first()
+    
     if not alert:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -188,16 +192,18 @@ async def export_alert_evidence(
                     "message": f"No alert found with id={alert_id}"},
         )
 
-    scan = db.query(ScanResult).filter(
-        ScanResult.alert_id == alert_id
-    ).first()
+    scan_result = await db.execute(select(ScanResult).filter(ScanResult.alert_id == alert_id))
+    scan = scan_result.scalars().first()
 
-    chain_entries = db.query(EvidenceChain).filter(
-        EvidenceChain.alert_id == alert_id
-    ).order_by(EvidenceChain.timestamp.asc()).all()
+    chain_result = await db.execute(
+        select(EvidenceChain)
+        .filter(EvidenceChain.alert_id == alert_id)
+        .order_by(EvidenceChain.timestamp.asc())
+    )
+    chain_entries = chain_result.scalars().all()
 
     model_scores: dict = {}
-    if scan and scan.model_scores:
+    if scan and getattr(scan, 'model_scores', None):
         try:
             model_scores = json.loads(scan.model_scores)
         except (TypeError, json.JSONDecodeError):
@@ -210,19 +216,19 @@ async def export_alert_evidence(
             "id": alert.id,
             "created_at": alert.created_at.isoformat() if alert.created_at else None,
             "severity": alert.severity,
-            "source_type": alert.source_type,
+            "source_type": getattr(alert, 'source_type', None),
             "source_url": getattr(alert, 'source_url', None),
         },
         "verdict": {
             "label": scan.verdict if scan else "unknown",
             "confidence": scan.confidence if scan else None,
-            "faces_detected": scan.faces_detected if scan else 0,
-            "processing_time_ms": scan.processing_time_ms if scan else None,
+            "faces_detected": getattr(scan, 'faces_detected', 0),
+            "processing_time_ms": getattr(scan, 'processing_time_ms', None),
         },
         "model_scores": model_scores,
         "explainability": {
-            "gradcam_path": scan.gradcam_path if scan else None,
-            "gradcam_available": bool(scan and scan.gradcam_path),
+            "gradcam_path": getattr(scan, 'gradcam_path', None),
+            "gradcam_available": bool(scan and getattr(scan, 'gradcam_path', None)),
         },
         "evidence_chain": [
             {
@@ -249,16 +255,18 @@ async def export_alert_evidence(
             "X-Export-Timestamp": bundle["exported_at"],
         },
     )
+
 @router.post("/{alert_id}/resolve", response_model=AlertResponse)
 async def resolve_alert(
     alert_id: int,
     resolution_notes: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Mark an alert as resolved.
     """
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    result = await db.execute(select(Alert).filter(Alert.id == alert_id))
+    alert = result.scalars().first()
     
     if not alert:
         raise HTTPException(
@@ -268,22 +276,22 @@ async def resolve_alert(
     
     try:
         alert.status = "resolved"
-        alert.end_time = datetime.utcnow()
+        alert.end_time = datetime.datetime.utcnow()
         
         if resolution_notes:
             if not alert.context_json:
                 alert.context_json = {}
             alert.context_json["resolution_notes"] = resolution_notes
         
-        db.commit()
-        db.refresh(alert)
+        await db.commit()
+        await db.refresh(alert)
         
         logger.info(f"Alert {alert_id} resolved")
         
         return alert
     
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         logger.error(f"Error resolving alert: {e}")
         raise HTTPException(
             status_code=500,
@@ -295,14 +303,15 @@ async def resolve_alert(
 async def mark_false_positive(
     alert_id: int,
     notes: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Mark an alert as a false positive.
     
     This is important for model improvement and calibration.
     """
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    result = await db.execute(select(Alert).filter(Alert.id == alert_id))
+    alert = result.scalars().first()
     
     if not alert:
         raise HTTPException(
@@ -312,24 +321,22 @@ async def mark_false_positive(
     
     try:
         alert.status = "false_positive"
-        alert.end_time = datetime.utcnow()
+        alert.end_time = datetime.datetime.utcnow()
         
         if notes:
             if not alert.context_json:
                 alert.context_json = {}
             alert.context_json["false_positive_notes"] = notes
         
-        db.commit()
-        db.refresh(alert)
+        await db.commit()
+        await db.refresh(alert)
         
         logger.info(f"Alert {alert_id} marked as false positive")
-        
-        # TODO: Use this feedback for model calibration
         
         return alert
     
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         logger.error(f"Error marking false positive: {e}")
         raise HTTPException(
             status_code=500,

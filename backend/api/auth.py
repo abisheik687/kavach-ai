@@ -1,4 +1,3 @@
-
 import os
 from datetime import datetime, timedelta
 from typing import Optional
@@ -7,11 +6,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from backend.database import get_db
-from backend.database import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from backend.database import get_db, User
 from backend.config import settings
 from backend.api.rate_limit import limiter
+import logging
 
 # KAVACH-AI Day 10: JWT Authentication
 # Handles login and token generation
@@ -22,6 +22,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+logger = logging.getLogger(__name__)
 
 class Token(BaseModel):
     access_token: str
@@ -49,7 +50,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -60,14 +61,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         username: str = payload.get("sub")
         token_type: str = payload.get("type")
         if username is None or token_type != "access":
-            # If there's no type, we fallback to access for backwards compatibility
             if token_type is not None and token_type != "access":
                 raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
         
-    user = db.query(User).filter(User.email == token_data.username).first()
+    result = await db.execute(select(User).filter(User.email == token_data.username))
+    user = result.scalars().first()
     if user is None:
         raise credentials_exception
     return user
@@ -84,8 +85,10 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 @auth_router.post("/token", response_model=Token)
 @limiter.limit(settings.LOGIN_RATE_LIMIT)
-async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).filter(User.email == form_data.username))
+    user = result.scalars().first()
+    
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -105,7 +108,7 @@ class RefreshTokenRequest(BaseModel):
 
 @auth_router.post("/refresh", response_model=Token)
 @limiter.limit(settings.LOGIN_RATE_LIMIT)
-async def refresh_access_token(request: Request, body: RefreshTokenRequest, db: Session = Depends(get_db)):
+async def refresh_access_token(request: Request, body: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -120,7 +123,8 @@ async def refresh_access_token(request: Request, body: RefreshTokenRequest, db: 
     except JWTError:
         raise credentials_exception
         
-    user = db.query(User).filter(User.email == username).first()
+    result = await db.execute(select(User).filter(User.email == username))
+    user = result.scalars().first()
     if user is None:
         raise credentials_exception
         
@@ -131,9 +135,6 @@ async def refresh_access_token(request: Request, body: RefreshTokenRequest, db: 
     new_refresh_token = create_refresh_token(data={"sub": user.email})
     return {"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
 
-import logging
-logger = logging.getLogger(__name__)
-
 @auth_router.post(
     "/register",
     status_code=status.HTTP_201_CREATED,
@@ -142,14 +143,8 @@ logger = logging.getLogger(__name__)
 )
 async def register(
     email: str, password: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    """
-    Create a new user account.
-    Gated by REGISTER_ENABLED environment variable.
-    Set REGISTER_ENABLED=true only during initial system setup.
-    This endpoint should be disabled (REGISTER_ENABLED=false) in production.
-    """
     if not settings.REGISTER_ENABLED:
         logger.warning(
             "Registration attempt blocked: REGISTER_ENABLED is false. "
@@ -164,7 +159,8 @@ async def register(
             },
         )
 
-    existing = db.query(User).filter(User.email == email).first()
+    result = await db.execute(select(User).filter(User.email == email))
+    existing = result.scalars().first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -181,8 +177,8 @@ async def register(
         role="admin",
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
 
     logger.info(f"New admin account created: {email}")
     return {"status": "User created", "email": email}

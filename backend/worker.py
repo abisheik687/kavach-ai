@@ -29,6 +29,19 @@ celery_app.conf.update(
     worker_concurrency=1 
 )
 
+import asyncio
+
+async def async_db_update(task_id: str, report: dict):
+    from backend.database import SessionLocal
+    from backend.crud import update_scan_result
+    
+    async with SessionLocal() as db:
+        try:
+            print(f"[{task_id}] Saving result to DB...")
+            await update_scan_result(db, task_id, report)
+        except Exception as e:
+            print(f"Error saving to DB: {e}")
+
 @celery_app.task(name="tasks.process_video")
 def process_video_task(file_path: str, task_id: str):
     """
@@ -42,14 +55,7 @@ def process_video_task(file_path: str, task_id: str):
     report = monitor_pipeline.process_media(file_path)
     
     # 2. Save to DB
-    db: Session = SessionLocal()
-    try:
-        print(f"[{task_id}] Saving result to DB...")
-        update_scan_result(db, task_id, report.__dict__)
-    except Exception as e:
-        print(f"Error saving to DB: {e}")
-    finally:
-        db.close()
+    asyncio.run(async_db_update(task_id, report.__dict__))
     
     print(f"[{task_id}] Complete. Verdict: {report.verdict}")
     return report.__dict__
