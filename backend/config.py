@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     KAVACH_MODEL_EFFICIENTNET_PATH: Optional[str] = None
     KAVACH_MODEL_XCEPTION_PATH: Optional[str] = None
     
+    # Auth Security
+    LOGIN_RATE_LIMIT: str = "5/minute"
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
     # ============================================
     # DATABASE
     # ============================================

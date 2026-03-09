@@ -168,7 +168,7 @@ async def get_alert_evidence(
 import json
 import datetime
 from fastapi.responses import Response
-from backend.models import ScanResult, EvidenceChain
+from backend.database import ScanResult, EvidenceChain
 
 @router.get("/{alert_id}/evidence/export", response_class=Response)
 async def export_alert_evidence(

@@ -21,6 +21,9 @@ from backend.api import scan            # Phase ORCH — Unified Orchestration S
 from backend.api import models_api      # Models and training info
 from backend.api import detections      # Detection history & stats
 from backend.detection.pipeline import analyze_frame
+from backend.api.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 
 
@@ -93,6 +96,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ============================================

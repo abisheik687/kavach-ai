@@ -1,11 +1,5 @@
 """
 DeepShield AI — Models Management API
-
-GET  /api/models           — list all available models with stats
-GET  /api/models/active    — current active model info
-POST /api/models/load      — switch active model
-GET  /api/models/benchmark — run quick benchmark on current model
-POST /api/models/export    — export active model to ONNX
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
@@ -13,9 +7,10 @@ from pydantic import BaseModel
 from typing import Optional
 from loguru import logger
 import time
+import torch
 
-from backend.detection.model_zoo import list_models, AVAILABLE_MODELS, export_onnx
-from backend.detection.ml_pipeline import switch_model, get_active_model_name
+from backend.ai.hf_registry import get_model_info, load_hf_model
+from backend.orchestrator.orchestrator import analyze
 
 router = APIRouter()
 
@@ -31,13 +26,10 @@ class ExportRequest(BaseModel):
 @router.get("/")
 async def get_models():
     """List all available deepfake detection models with capabilities."""
-    models = list_models()
-    active = get_active_model_name()
-    for m in models:
-        m["active"] = (m["name"] == active)
+    models = get_model_info()
     return {
         "status": "ok",
-        "active_model": active,
+        "active_model": "ensemble",  # No single active model anymore
         "models": models,
         "device": _get_device_info(),
     }
@@ -46,36 +38,28 @@ async def get_models():
 @router.get("/active")
 async def get_active_model():
     """Return currently loaded model details."""
-    name = get_active_model_name()
-    if name == "none":
-        return {"status": "ok", "active": None, "message": "No model loaded yet — first inference will auto-load efficientnet_b4"}
-    cfg = AVAILABLE_MODELS.get(name, {})
-    return {"status": "ok", "active": name, **cfg}
+    return {"status": "ok", "active": "ensemble", "message": "All models are orchestrated dynamically."}
 
 
 @router.post("/load")
 async def load_model(req: LoadModelRequest):
     """
-    Load (or switch to) a specific model.
-    First call may take 10–30 seconds to download pretrained weights.
+    Pre-load a specific model into memory.
     """
-    if req.model_name not in AVAILABLE_MODELS:
-        raise HTTPException(400, f"Unknown model '{req.model_name}'. "
-                            f"Available: {list(AVAILABLE_MODELS.keys())}")
-    logger.info(f"[ModelsAPI] Loading model: {req.model_name}")
-    result = switch_model(req.model_name)
-    if result["status"] == "error":
-        raise HTTPException(500, result["message"])
-    return result
+    try:
+        load_hf_model(req.model_name)
+        return {"status": "ok", "message": f"{req.model_name} loaded successfully."}
+    except Exception as e:
+        logger.error(f"[ModelsAPI] Error loading model: {e}")
+        raise HTTPException(500, str(e))
 
 
 @router.get("/benchmark")
 async def benchmark_model():
-    """Run a quick timing benchmark on the active model using a blank 224×224 image."""
-    import torch, base64, io
+    """Run a quick timing benchmark on the ensemble orchestrator using a blank 224×224 image."""
+    import base64, io
     import numpy as np
     from PIL import Image
-    from backend.detection.ml_pipeline import ml_analyze_frame
 
     # Create a synthetic face-like test image (white noise)
     test_img = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
@@ -85,12 +69,12 @@ async def benchmark_model():
     b64 = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
 
     start = time.perf_counter()
-    result = ml_analyze_frame(b64, return_heatmap=False)
+    result = await analyze(b64)
     elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
 
     return {
         "status": "ok",
-        "model": get_active_model_name(),
+        "model": "ensemble",
         "latency_ms": elapsed_ms,
         "device": _get_device_info(),
         "verdict": result.get("verdict"),
@@ -100,23 +84,13 @@ async def benchmark_model():
 @router.post("/export")
 async def export_model(req: ExportRequest, background_tasks: BackgroundTasks):
     """Export model to ONNX for faster CPU inference via onnxruntime."""
-    name = req.model_name or get_active_model_name()
-    if name == "none":
-        raise HTTPException(400, "No model loaded. Call /api/models/load first.")
-
-    def _do_export():
-        path = export_onnx(name)
-        logger.success(f"[ModelsAPI] ONNX export complete → {path}")
-
-    background_tasks.add_task(_do_export)
     return {
         "status": "ok",
-        "message": f"ONNX export started for '{name}' — will save to models/{name}_deepfake.onnx",
+        "message": "ONNX export is now handled via the training pipeline directly. Run ./training/train.sh to generate .onnx files.",
     }
 
 
 def _get_device_info() -> dict:
-    import torch
     gpu = None
     if torch.cuda.is_available():
         gpu = {

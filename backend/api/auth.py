@@ -2,7 +2,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.database import User
+from backend.config import settings
+from backend.api.rate_limit import limiter
 
 # KAVACH-AI Day 10: JWT Authentication
 # Handles login and token generation
@@ -23,6 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str
 
 class TokenData(BaseModel):
@@ -55,8 +58,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
+        token_type: str = payload.get("type")
+        if username is None or token_type != "access":
+            # If there's no type, we fallback to access for backwards compatibility
+            if token_type is not None and token_type != "access":
+                raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
@@ -66,8 +72,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise credentials_exception
     return user
 
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
 @auth_router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit(settings.LOGIN_RATE_LIMIT)
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -78,11 +95,42 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.email, "type": "access"}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(data={"sub": user.email})
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
-from backend.config import settings
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+@auth_router.post("/refresh", response_model=Token)
+@limiter.limit(settings.LOGIN_RATE_LIMIT)
+async def refresh_access_token(request: Request, body: RefreshTokenRequest, db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(body.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        token_type: str = payload.get("type", "")
+        if username is None or token_type != "refresh":
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+        
+    user = db.query(User).filter(User.email == username).first()
+    if user is None:
+        raise credentials_exception
+        
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email, "type": "access"}, expires_delta=access_token_expires
+    )
+    new_refresh_token = create_refresh_token(data={"sub": user.email})
+    return {"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
+
 import logging
 logger = logging.getLogger(__name__)
 
