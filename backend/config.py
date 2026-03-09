@@ -198,6 +198,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        secrets_dir = "/run/secrets"
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -31,8 +31,12 @@ FROM base as app
 COPY backend/ ./backend/
 COPY scripts/ ./scripts/
 
-# Create necessary directories
-RUN mkdir -p /app/models /app/data /app/evidence /app/logs
+# Create necessary directories and set up non-root user
+RUN addgroup --system kavach && adduser --system --group kavach && \
+    mkdir -p /app/models /app/data /app/evidence /app/logs && \
+    chown -R kavach:kavach /app
+
+USER kavach
 
 # Download pre-trained models (if script exists)
 # RUN python scripts/download_models.py || echo "Model download skipped"
