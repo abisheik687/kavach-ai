@@ -1,7 +1,7 @@
 <!--
 Internal trace:
-- Wrong before: the README was accurate but sparse, with limited project understanding, no visual flow, and no polished onboarding path for a fresh user.
-- Fixed now: the README is a professional landing page with banner imagery, architecture/workflow diagrams, project explanation, and the fresh-system one-command localhost bootstrap.
+- Wrong before: the README used a single giant bootstrap command, which was harder to trust, debug, and maintain for real users.
+- Fixed now: the README keeps the professional overview but switches startup guidance to structured multi-step commands for Docker and manual local development.
 -->
 
 # KAVACH-AI
@@ -32,7 +32,7 @@ The repository was cleaned and reorganized so the active application is easy to 
 
 - `backend/` contains the FastAPI service, validation, model loading, and image/audio/video pipelines.
 - `frontend/` contains the responsive React application for upload, progress tracking, and result review.
-- `legacy/` contains archived experiments and older realtime/dashboard code that is no longer part of the running product.
+- `legacy/` contains archived experiments and older realtime/dashboard code that are no longer part of the running product.
 
 ### What the active application does
 
@@ -181,47 +181,135 @@ flowchart LR
 
 ---
 
-## Fresh-System One-Command Bootstrap (Windows PowerShell)
+## Recommended Setup
 
-This is the optimized one-command bootstrap for a **fresh Windows system**. It installs missing tools, clones the repository if needed, creates env files, starts the active stack, waits for readiness, and opens the app on localhost.
+### Option A: Docker Compose
 
-```powershell
-$repo = if (Test-Path '.git') { (Get-Location).Path } else { Join-Path $HOME 'kavach-ai' }; if (!(Get-Command git -ErrorAction SilentlyContinue) -and !(Test-Path "$Env:ProgramFiles\Git\cmd\git.exe")) { winget install --id Git.Git -e --accept-package-agreements --accept-source-agreements }; $git = if (Get-Command git -ErrorAction SilentlyContinue) { (Get-Command git).Source } else { "$Env:ProgramFiles\Git\cmd\git.exe" }; if (!(Test-Path (Join-Path $repo '.git'))) { & $git clone https://github.com/abisheik687/kavach-ai.git $repo }; Set-Location $repo; if (Test-Path '.env.example' -and !(Test-Path '.env')) { Copy-Item '.env.example' '.env' }; if (Test-Path 'backend\.env.example' -and !(Test-Path 'backend\.env')) { Copy-Item 'backend\.env.example' 'backend\.env' }; if (Test-Path 'frontend\.env.example' -and !(Test-Path 'frontend\.env')) { Copy-Item 'frontend\.env.example' 'frontend\.env' }; if (Test-Path 'docker-compose.yml') { if (!(Test-Path "$Env:ProgramFiles\Docker\Docker\Docker Desktop.exe")) { winget install --id Docker.DockerDesktop -e --accept-package-agreements --accept-source-agreements }; if (-not (Get-Process 'Docker Desktop' -ErrorAction SilentlyContinue)) { Start-Process "$Env:ProgramFiles\Docker\Docker\Docker Desktop.exe" }; $docker = "$Env:ProgramFiles\Docker\Docker\resources\bin\docker.exe"; do { Start-Sleep 5 } until (Test-Path $docker); do { Start-Sleep 5; try { & $docker info *> $null; $ready = $LASTEXITCODE -eq 0 } catch { $ready = $false } } until ($ready); & $docker compose up --build -d; do { Start-Sleep 5; try { $api = (Invoke-WebRequest 'http://localhost:8000/health' -UseBasicParsing -TimeoutSec 5).StatusCode -eq 200; $web = (Invoke-WebRequest 'http://localhost:4173' -UseBasicParsing -TimeoutSec 5).StatusCode -ge 200 } catch { $api = $false; $web = $false } } until ($api -and $web); Start-Process 'http://localhost:4173' } else { if (!(Get-Command py -ErrorAction SilentlyContinue)) { winget install --id Python.Python.3.11 -e --accept-package-agreements --accept-source-agreements }; if (!(Test-Path "$Env:ProgramFiles\nodejs\npm.cmd")) { winget install --id OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements }; py -3.11 -m venv .venv; .\.venv\Scripts\python.exe -m pip install --upgrade pip; .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt; & "$Env:ProgramFiles\nodejs\npm.cmd" ci --prefix frontend; Start-Process powershell -ArgumentList '-NoExit','-Command','Set-Location ''backend''; ..\.venv\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8000'; Start-Process powershell -ArgumentList '-NoExit','-Command','Set-Location ''frontend''; npm run dev -- --host 0.0.0.0 --port 4173'; do { Start-Sleep 5; try { $api = (Invoke-WebRequest 'http://localhost:8000/health' -UseBasicParsing -TimeoutSec 5).StatusCode -eq 200; $web = (Invoke-WebRequest 'http://localhost:4173' -UseBasicParsing -TimeoutSec 5).StatusCode -ge 200 } catch { $api = $false; $web = $false } } until ($api -and $web); Start-Process 'http://localhost:4173' }
+This is the fastest and most reliable way to run the project on a fresh system.
+
+#### 1. Clone the repository
+
+```bash
+git clone https://github.com/abisheik687/kavach-ai.git
+cd kavach-ai
 ```
 
-### What the command does
+#### 2. Create environment files
 
-- Installs **Git** if needed and clones the repo when you are not already inside it.
-- Copies root, backend, and frontend `.env.example` files into working `.env` files.
-- Prefers **Docker Compose** for the fastest reliable full-stack startup on a fresh machine.
-- Falls back to **Python 3.11 + npm** if Docker is not available.
-- Waits until both backend and frontend are reachable, then opens the app at `http://localhost:4173`.
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
 
----
+Windows PowerShell alternative:
 
-## Standard Local Start
+```powershell
+Copy-Item .env.example .env
+Copy-Item backend\.env.example backend\.env
+Copy-Item frontend\.env.example frontend\.env
+```
 
-### Docker
+#### 3. Start the full stack
 
 ```bash
 docker compose up --build
 ```
 
-### Manual Development
+#### 4. Open the application
 
-Backend:
+- Web App: `http://localhost:4173`
+- Backend API: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
 
-```powershell
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn main:app --reload
+---
+
+## Manual Local Development
+
+Use this if you do not want Docker.
+
+### 1. Install prerequisites
+
+- Python 3.11+
+- Node.js 20+
+- npm
+- ffmpeg
+
+### 2. Clone the repository
+
+```bash
+git clone https://github.com/abisheik687/kavach-ai.git
+cd kavach-ai
 ```
 
-Frontend:
+### 3. Create environment files
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Windows PowerShell alternative:
 
 ```powershell
+Copy-Item .env.example .env
+Copy-Item backend\.env.example backend\.env
+Copy-Item frontend\.env.example frontend\.env
+```
+
+### 4. Create and activate a Python virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+macOS / Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+### 5. Install backend dependencies
+
+```bash
+pip install --upgrade pip
+pip install -r backend/requirements.txt
+```
+
+### 6. Install frontend dependencies
+
+This repository currently ships with `frontend/package-lock.json`, so `npm ci` is the correct fast and deterministic install method.
+
+```bash
+npm ci --prefix frontend
+```
+
+### 7. Start the backend
+
+```bash
+cd backend
+uvicorn main:app --reload
+```
+
+### 8. Start the frontend in a second terminal
+
+```bash
 cd frontend
 npm run dev
 ```
+
+### 9. Open the application
+
+- Web App: `http://localhost:4173`
+- Backend API: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
 
 ---
 
