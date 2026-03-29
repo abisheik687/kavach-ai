@@ -40,14 +40,14 @@ async def validate_upload(file: UploadFile = File(...)) -> UploadValidationInfo:
     if file is None or not file.filename:
         raise AppError(422, 'No file uploaded', 'MISSING_FILE')
 
-    content = await file.read()
+    header = await file.read(64)
     await file.seek(0)
 
-    if not content:
+    if not header:
         raise AppError(422, 'Uploaded file is empty', 'EMPTY_FILE')
 
     content_type = (file.content_type or '').lower()
-    sniffed_type = sniff_file_type(content)
+    sniffed_type = sniff_file_type(header)
     effective_type = sniffed_type or content_type
 
     if effective_type not in SUPPORTED_TYPES:
@@ -58,8 +58,11 @@ async def validate_upload(file: UploadFile = File(...)) -> UploadValidationInfo:
         )
 
     file_type = SUPPORTED_TYPES[effective_type]
+    file.file.seek(0, 2)
+    size_bytes = file.file.tell()
+    file.file.seek(0)
     max_size = settings.max_video_bytes if file_type == 'video' else settings.max_image_audio_bytes
-    if len(content) > max_size:
+    if size_bytes > max_size:
         raise AppError(
             413,
             f'File exceeds the {max_size // (1024 * 1024)} MB limit for {file_type} uploads.',
@@ -75,5 +78,5 @@ async def validate_upload(file: UploadFile = File(...)) -> UploadValidationInfo:
         content_type=effective_type,
         file_type=file_type,
         suffix=suffix,
-        size_bytes=len(content),
+        size_bytes=size_bytes,
     )

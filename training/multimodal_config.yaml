@@ -1,0 +1,75 @@
+seed: 42
+output_root: training/artifacts
+manifest_root: training/manifests
+train_ratio: 0.70
+val_ratio: 0.15
+test_ratio: 0.15
+
+datasets:
+  # Image datasets (frames extracted from video)
+  - name: faceforensics_pp
+    path: data/image/faceforensics_pp
+    modalities: [image]
+  - name: celeb_df
+    path: data/image/celeb_df
+    modalities: [image]
+  - name: dfdc
+    path: data/image/dfdc
+    modalities: [image]
+
+  # Audio datasets
+  - name: asvspoof
+    path: data/audio/asvspoof
+    modalities: [audio]
+  - name: fakeavceleb
+    path: data/audio/fakeavceleb
+    modalities: [audio]
+
+  # Video datasets
+  - name: faceforensics_pp_video
+    path: data/video/faceforensics_pp
+    modalities: [video]
+  - name: dfdc_video
+    path: data/video/dfdc
+    modalities: [video]
+
+image:
+  architecture: efficientnet_b4
+  pretrained: true
+  batch_size: 16
+  epochs: 5
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  image_size: 224
+  num_workers: 0
+  early_stop_patience: 3
+  export_onnx: true
+
+audio:
+  architecture: audio_spectrogram_efficientnet_b0
+  pretrained: true
+  batch_size: 16
+  epochs: 5
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+  image_size: 224
+  sample_rate: 16000
+  max_audio_seconds: 4
+  n_mels: 128
+  num_workers: 0
+  early_stop_patience: 3
+  export_onnx: true
+
+video:
+  architecture: r3d_18
+  pretrained: true
+  batch_size: 4
+  epochs: 4
+  learning_rate: 0.00005
+  weight_decay: 0.0001
+  image_size: 112
+  clip_frames: 16
+  clip_stride: 4
+  num_workers: 0
+  early_stop_patience: 2
+  export_onnx: true

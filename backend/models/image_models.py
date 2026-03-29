@@ -12,9 +12,7 @@ from typing import Callable
 
 import cv2
 import numpy as np
-import torch
-from PIL import Image
-from transformers import AutoImageProcessor, AutoModelForImageClassification
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from config import settings
 from utils.file_utils import clamp
@@ -92,9 +90,13 @@ class ImageModelSlot:
 
 class ImageModelFactory:
     def __init__(self) -> None:
+        import torch
+
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def build_transformers_classifier(self, repo_id: str) -> tuple[Callable[[Image.Image], float], str]:
+        from transformers import AutoImageProcessor, AutoModelForImageClassification
+
         processor = AutoImageProcessor.from_pretrained(repo_id)
         model = AutoModelForImageClassification.from_pretrained(repo_id)
         model.eval().to(self.device)
@@ -181,4 +183,16 @@ def create_fallback_scorer(slot_key: str) -> Callable[[Image.Image], float]:
 
 
 def prepare_image(image_bytes: bytes) -> Image.Image:
-    return _detect_primary_face(Image.open(BytesIO(image_bytes)).convert('RGB'))
+    try:
+        image = ImageOps.exif_transpose(Image.open(BytesIO(image_bytes))).convert('RGB')
+    except UnidentifiedImageError as exc:
+        raise ValueError('Unsupported or corrupt image file') from exc
+
+    width, height = image.size
+    max_side = max(width, height)
+    if max_side > 0:
+        max_allowed_side = int(np.sqrt(settings.max_image_pixels))
+        if width * height > settings.max_image_pixels or max_side > max_allowed_side:
+            image.thumbnail((max_allowed_side, max_allowed_side), Image.Resampling.LANCZOS)
+
+    return _detect_primary_face(image)

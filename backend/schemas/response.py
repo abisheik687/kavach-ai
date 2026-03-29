@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 
 Verdict = Literal['REAL', 'FAKE', 'UNCERTAIN']
+Prediction = Literal['real', 'fake', 'uncertain']
 
 
 class ModelScore(BaseModel):
@@ -26,6 +27,7 @@ class AudioResult(BaseModel):
     fake_probability: float = Field(ge=0.0, le=1.0)
     waveform: list[float] = Field(default_factory=list)
     mode: str = 'primary'
+    model: str | None = None
 
 
 class VideoFramePreview(BaseModel):
@@ -35,13 +37,18 @@ class VideoFramePreview(BaseModel):
 
 
 class AnalysisResult(BaseModel):
-    file_type: Literal['image', 'video', 'audio']
-    verdict: Verdict
-    overall_confidence: float = Field(ge=0.0, le=1.0)
-    fake_probability: float = Field(ge=0.0, le=1.0)
+    type: Literal['image', 'video', 'audio']
+    prediction: Prediction
+    confidence: float = Field(ge=0.0, le=100.0)
+    processing_time: str = '0 ms'
+    file_type: Literal['image', 'video', 'audio'] | None = None
+    verdict: Verdict | None = None
+    overall_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    fake_probability: float = Field(default=0.0, ge=0.0, le=1.0)
     model_scores: list[ModelScore] = Field(default_factory=list)
     video_frame_scores: list[float] = Field(default_factory=list)
     video_frame_previews: list[VideoFramePreview] = Field(default_factory=list)
     audio_result: AudioResult | None = None
     processing_time_ms: int = 0
     warnings: list[str] = Field(default_factory=list)
+    model_versions: dict[str, str] = Field(default_factory=dict)

@@ -57,7 +57,7 @@ def test_health_endpoint_reports_loaded_model_slots(client: TestClient) -> None:
     response = client.get('/health')
 
     assert response.status_code == 200
-    assert response.json() == {'status': 'ok', 'models_loaded': 5}
+    assert response.json() == {'status': 'ok', 'models_loaded': 6}
 
 
 def test_analyse_image_returns_live_model_scores(client: TestClient) -> None:
@@ -68,8 +68,10 @@ def test_analyse_image_returns_live_model_scores(client: TestClient) -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload['file_type'] == 'image'
-    assert payload['verdict'] in {'REAL', 'FAKE', 'UNCERTAIN'}
+    assert payload['type'] == 'image'
+    assert payload['prediction'] in {'real', 'fake', 'uncertain'}
+    assert 0.0 <= payload['confidence'] <= 100.0
+    assert payload['processing_time'].endswith(' ms')
     assert len(payload['model_scores']) == 4
     assert payload['audio_result'] is None
 
@@ -82,7 +84,9 @@ def test_analyse_audio_returns_audio_result(client: TestClient) -> None:
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload['file_type'] == 'audio'
+    assert payload['type'] == 'audio'
+    assert payload['prediction'] in {'real', 'fake'}
+    assert 0.0 <= payload['confidence'] <= 100.0
     assert payload['audio_result'] is not None
     assert payload['audio_result']['verdict'] in {'REAL', 'FAKE'}
     assert isinstance(payload['audio_result']['waveform'], list)

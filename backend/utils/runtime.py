@@ -1,0 +1,38 @@
+from __future__ import annotations
+
+import asyncio
+from collections.abc import Awaitable, Callable
+from functools import partial
+from typing import TypeVar
+
+from config import settings
+from utils.file_utils import AppError
+from utils.logger import get_logger
+
+
+logger = get_logger(__name__)
+T = TypeVar('T')
+_analysis_semaphore = asyncio.Semaphore(settings.max_concurrent_analyses)
+
+
+async def run_inference(func: Callable[..., T], *args, timeout_seconds: int, stage: str) -> T:
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(partial(func, *args)), timeout=timeout_seconds)
+    except TimeoutError as exc:
+        logger.warning('analysis_stage_timeout', extra={'stage': stage, 'timeout_seconds': timeout_seconds})
+        raise AppError(504, f'{stage} timed out before analysis could finish.', 'ANALYSIS_TIMEOUT') from exc
+    except AppError:
+        raise
+    except Exception as exc:
+        logger.exception('analysis_stage_failed', extra={'stage': stage, 'error': str(exc)})
+        raise AppError(422, f'{stage} failed while processing the uploaded media.', 'ANALYSIS_STAGE_FAILED') from exc
+
+
+async def run_analysis(coro: Awaitable[T], *, timeout_seconds: int, stage: str) -> T:
+    async with _analysis_semaphore:
+        try:
+            return await asyncio.wait_for(coro, timeout=timeout_seconds)
+        except TimeoutError as exc:
+            logger.warning('analysis_timeout', extra={'stage': stage, 'timeout_seconds': timeout_seconds})
+            raise AppError(504, f'{stage} timed out before analysis could finish.', 'ANALYSIS_TIMEOUT') from exc
+

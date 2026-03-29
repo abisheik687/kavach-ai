@@ -1,12 +1,11 @@
 """
 Internal trace:
-- Wrong before: video analysis returned clip-level verdicts from all sampled frames but exposed per-model scores only from the last processed frame, hardcoded frame stride/max-frame limits instead of using runtime settings, and treated unreadable videos like uncertain analyses.
-- Fixed now: frame sampling obeys config, per-model scores are averaged across the whole clip, unreadable/corrupt videos fail with a clear 422 error, and audio extraction remains optional but isolated.
+- Wrong before: video analysis decoded too much media eagerly, sampled frames by walking the full clip, and let per-frame failures bubble into request crashes.
+- Fixed now: frame extraction is bounded by duration and sample count, inference failures degrade gracefully, and optional audio extraction is capped and isolated.
 """
 
 from __future__ import annotations
 
-import asyncio
 import subprocess
 import tempfile
 from collections import defaultdict
@@ -14,46 +13,83 @@ from pathlib import Path
 
 import cv2
 import librosa
+import numpy as np
+import soundfile as sf
 
 from config import settings
 from models.ensemble import aggregate_video_scores
 from models.loader import ModelRegistry
 from pipelines.audio_pipeline import _build_waveform
 from schemas.response import AnalysisResult, AudioResult, ModelScore, VideoFramePreview
-from utils.file_utils import AppError, cleanup_path, find_ffmpeg_binary, image_to_base64
+from utils.file_utils import AppError, clamp, cleanup_path, find_ffmpeg_binary, image_to_base64
+from utils.runtime import run_inference
+
+
+def _compute_frame_indices(frame_count: int, fps: float) -> list[int]:
+    if frame_count <= 0:
+        return []
+
+    max_frame_window = frame_count
+    if fps > 0:
+        max_frame_window = min(frame_count, int(fps * settings.max_video_seconds))
+
+    stride = max(settings.video_frame_stride, max(max_frame_window // max(settings.max_video_frames, 1), 1))
+    indices = list(range(0, max_frame_window, stride))
+    return indices[: settings.max_video_frames]
 
 
 def _extract_frames(video_path: Path) -> list[tuple[int, object]]:
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
-        return []
+        raise ValueError('Video could not be opened')
 
+    frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0)
+    target_indices = _compute_frame_indices(frame_count, fps)
     frames: list[tuple[int, object]] = []
-    index = 0
-    while True:
-        ok, frame = capture.read()
-        if not ok:
-            break
-        if index % settings.video_frame_stride == 0:
-            frames.append((index, frame))
-        if len(frames) >= settings.max_video_frames:
-            break
-        index += 1
 
-    capture.release()
+    try:
+        if target_indices:
+            for index in target_indices:
+                capture.set(cv2.CAP_PROP_POS_FRAMES, index)
+                ok, frame = capture.read()
+                if ok and frame is not None:
+                    frames.append((index, frame))
+        else:
+            max_frames = settings.max_video_frames
+            max_index = int(fps * settings.max_video_seconds) if fps > 0 else settings.max_video_frames * settings.video_frame_stride
+            index = 0
+            while len(frames) < max_frames and index <= max_index:
+                ok, frame = capture.read()
+                if not ok:
+                    break
+                if index % settings.video_frame_stride == 0:
+                    frames.append((index, frame))
+                index += 1
+    finally:
+        capture.release()
+
+    if not frames:
+        raise ValueError('Video did not yield readable frames')
     return frames
 
 
-def _analyse_frame(frame, registry: ModelRegistry) -> tuple[float, list[ModelScore], VideoFramePreview | None]:
+def _analyse_frame(frame, registry: ModelRegistry) -> tuple[float, list[ModelScore]]:
     from PIL import Image
 
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    height, width = rgb.shape[:2]
+    max_side = max(height, width)
+    if max_side > 720:
+        scale = 720.0 / max_side
+        rgb = cv2.resize(rgb, (max(int(width * scale), 1), max(int(height * scale), 1)))
+
     pil_image = Image.fromarray(rgb)
     weighted_scores: list[tuple[float, float]] = []
     model_scores: list[ModelScore] = []
 
     for loaded in registry.image_models:
-        fake_probability = float(loaded.infer(pil_image))
+        fake_probability = clamp(float(loaded.infer(pil_image)))
         weighted_scores.append((fake_probability, loaded.slot.weight))
         model_scores.append(
             ModelScore(
@@ -66,12 +102,7 @@ def _analyse_frame(frame, registry: ModelRegistry) -> tuple[float, list[ModelSco
 
     total_weight = sum(weight for _, weight in weighted_scores)
     frame_probability = sum(prob * weight for prob, weight in weighted_scores) / max(total_weight, 1e-6)
-    preview = VideoFramePreview(
-        index=0,
-        fake_probability=round(frame_probability, 4),
-        image_base64=image_to_base64(cv2.resize(frame, (256, 144))),
-    )
-    return frame_probability, model_scores, preview
+    return clamp(frame_probability), model_scores
 
 
 def _extract_audio_track(video_path: Path, target_dir: Path) -> Path | None:
@@ -86,6 +117,8 @@ def _extract_audio_track(video_path: Path, target_dir: Path) -> Path | None:
         '-i',
         str(video_path),
         '-vn',
+        '-t',
+        str(settings.max_audio_seconds),
         '-acodec',
         'pcm_s16le',
         '-ar',
@@ -94,10 +127,27 @@ def _extract_audio_track(video_path: Path, target_dir: Path) -> Path | None:
         '1',
         str(audio_path),
     ]
-    completed = subprocess.run(command, capture_output=True, check=False)
+    completed = subprocess.run(command, capture_output=True, check=False, timeout=settings.audio_timeout_seconds)
     if completed.returncode != 0 or not audio_path.exists():
         return None
     return audio_path
+
+
+def _load_audio_clip(audio_path: Path) -> tuple[object, int]:
+    if audio_path.suffix.lower() == '.wav':
+        audio, sample_rate = sf.read(str(audio_path), always_2d=False)
+        if isinstance(audio, np.ndarray) and audio.ndim > 1:
+            audio = audio.mean(axis=1)
+        audio = np.asarray(audio, dtype=np.float32)
+        audio = audio[: settings.max_audio_seconds * sample_rate]
+    else:
+        audio, sample_rate = librosa.load(
+            str(audio_path),
+            sr=16000,
+            mono=True,
+            duration=settings.max_audio_seconds,
+        )
+    return audio, sample_rate
 
 
 def _average_model_scores(model_scores_per_frame: list[list[ModelScore]]) -> list[ModelScore]:
@@ -129,46 +179,135 @@ def _average_model_scores(model_scores_per_frame: list[list[ModelScore]]) -> lis
 
 
 async def analyse_video_file(file_path: Path, registry: ModelRegistry, validation, background_tasks) -> AnalysisResult:
-    frames = await asyncio.to_thread(_extract_frames, file_path)
+    try:
+        frames = await run_inference(
+            _extract_frames,
+            file_path,
+            timeout_seconds=settings.video_timeout_seconds,
+            stage='Video decoding',
+        )
+    except AppError:
+        raise
+    except Exception as exc:
+        raise AppError(422, 'Video could not be decoded. Upload a valid MP4 or WEBM file.', 'INVALID_VIDEO_FILE') from exc
+
     warnings = list(dict.fromkeys(registry.warnings))
-
-    if not frames:
-        raise AppError(422, 'Video could not be decoded. Upload a valid MP4 or WEBM file.', 'INVALID_VIDEO_FILE')
-
     frame_scores: list[float] = []
     previews: list[VideoFramePreview] = []
     model_scores_per_frame: list[list[ModelScore]] = []
+    preview_interval = max(len(frames) // max(settings.max_video_previews, 1), 1)
 
-    for index, frame in frames:
-        frame_probability, model_scores, preview = await asyncio.to_thread(_analyse_frame, frame, registry)
+    for position, (index, frame) in enumerate(frames):
+        try:
+            frame_probability, model_scores = await run_inference(
+                _analyse_frame,
+                frame,
+                registry,
+                timeout_seconds=settings.image_timeout_seconds,
+                stage=f'Video frame {index} inference',
+            )
+        except AppError:
+            warnings.append(f'Frame {index} inference failed and was skipped')
+            continue
+
         frame_scores.append(round(frame_probability, 4))
         model_scores_per_frame.append(model_scores)
-        if preview:
-            preview.index = index
-            previews.append(preview)
+        if position % preview_interval == 0 and len(previews) < settings.max_video_previews:
+            previews.append(
+                VideoFramePreview(
+                    index=index,
+                    fake_probability=round(frame_probability, 4),
+                    image_base64=image_to_base64(cv2.resize(frame, (256, 144))),
+                )
+            )
+
+    if not frame_scores:
+        raise AppError(422, 'Video frames could not be analysed reliably.', 'VIDEO_ANALYSIS_FAILED')
 
     fake_probability, verdict, confidence = aggregate_video_scores(frame_scores)
     averaged_model_scores = _average_model_scores(model_scores_per_frame)
+    temporal_probability = None
+
+    if registry.video_model:
+        try:
+            temporal_probability = await run_inference(
+                registry.video_model.infer,
+                str(file_path),
+                timeout_seconds=settings.video_timeout_seconds,
+                stage='Video temporal inference',
+            )
+            temporal_probability = clamp(temporal_probability)
+            fake_probability = clamp((0.6 * fake_probability) + (0.4 * temporal_probability))
+            confidence = max(fake_probability, 1.0 - fake_probability)
+            verdict = 'FAKE' if fake_probability > settings.default_image_threshold else 'REAL'
+            averaged_model_scores.append(
+                ModelScore(
+                    model='VideoMAE Temporal',
+                    fake_prob=round(temporal_probability, 4),
+                    weight=0.4,
+                    mode=registry.video_model.mode,
+                )
+            )
+        except AppError:
+            warnings.append('Video temporal model failed; using frame-level evidence only')
 
     audio_result = None
     temp_audio_dir = Path(tempfile.mkdtemp(prefix='kavach_video_audio_', dir=file_path.parent))
     background_tasks.add_task(cleanup_path, temp_audio_dir)
-    audio_path = await asyncio.to_thread(_extract_audio_track, file_path, temp_audio_dir)
-    if audio_path:
-        audio, sample_rate = await asyncio.to_thread(librosa.load, str(audio_path), sr=16000, mono=True)
-        handle = registry.audio_model
-        audio_probability = await asyncio.to_thread(handle.infer, audio, sample_rate) if handle else 0.5
-        audio_verdict = 'FAKE' if audio_probability > settings.default_image_threshold else 'REAL'
-        audio_result = AudioResult(
-            verdict=audio_verdict,
-            fake_probability=round(audio_probability, 4),
-            waveform=_build_waveform(audio),
-            mode=handle.mode if handle else 'missing',
+
+    try:
+        audio_path = await run_inference(
+            _extract_audio_track,
+            file_path,
+            temp_audio_dir,
+            timeout_seconds=settings.audio_timeout_seconds,
+            stage='Video audio extraction',
         )
+    except AppError:
+        audio_path = None
+        warnings.append('Video audio extraction timed out and was skipped')
+
+    if audio_path:
+        try:
+            audio, sample_rate = await run_inference(
+                _load_audio_clip,
+                audio_path,
+                timeout_seconds=settings.audio_timeout_seconds,
+                stage='Video audio decoding',
+            )
+            handle = registry.audio_model
+            audio_probability = 0.5
+            audio_mode = 'missing'
+            if handle:
+                try:
+                    audio_probability = await run_inference(
+                        handle.infer,
+                        audio,
+                        sample_rate,
+                        timeout_seconds=settings.audio_timeout_seconds,
+                        stage='Video audio inference',
+                    )
+                    audio_mode = handle.mode
+                except AppError:
+                    warnings.append('Video audio inference failed; using neutral fallback score')
+            audio_probability = clamp(audio_probability)
+            audio_verdict = 'FAKE' if audio_probability > settings.default_audio_threshold else 'REAL'
+            audio_result = AudioResult(
+                verdict=audio_verdict,
+                fake_probability=round(audio_probability, 4),
+                waveform=_build_waveform(audio),
+                mode=audio_mode,
+            )
+        except AppError:
+            warnings.append('Video audio track could not be analysed reliably')
     else:
         warnings.append('Video audio track could not be extracted in the current environment')
 
     return AnalysisResult(
+        type=validation.file_type,
+        prediction=verdict.lower(),
+        confidence=round(confidence * 100.0, 2),
+        processing_time='0 ms',
         file_type=validation.file_type,
         verdict=verdict,
         overall_confidence=round(confidence, 4),

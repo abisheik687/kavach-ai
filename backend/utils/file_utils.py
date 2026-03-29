@@ -32,6 +32,8 @@ def sniff_file_type(content: bytes) -> str | None:
         return 'image/jpeg'
     if header.startswith(b'\x89PNG\r\n\x1a\n'):
         return 'image/png'
+    if header[:4] == b'RIFF' and header[8:12] == b'WEBP':
+        return 'image/webp'
     if header[:4] == b'RIFF' and header[8:12] == b'WAVE':
         return 'audio/wav'
     if header.startswith(b'OggS'):
@@ -48,11 +50,19 @@ def sniff_file_type(content: bytes) -> str | None:
 
 
 async def persist_upload_to_temp(file: UploadFile, validation) -> Path:
-    content = await file.read()
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=validation.suffix,
+        prefix='kavach_',
+        dir=settings.temp_dir,
+    ) as handle:
+        while True:
+            chunk = await file.read(settings.upload_chunk_size_bytes)
+            if not chunk:
+                break
+            handle.write(chunk)
     await file.seek(0)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=validation.suffix) as handle:
-        handle.write(content)
-        return Path(handle.name)
+    return Path(handle.name)
 
 
 def cleanup_path(path: str | Path) -> None:
