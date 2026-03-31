@@ -1,0 +1,100 @@
+{
+  "data_dir": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data",
+  "dry_run": false,
+  "modalities": {
+    "image": {
+      "faceforensics_pp": {
+        "path": "data\\image\\faceforensics_pp",
+        "real": 0,
+        "fake": 0,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "empty",
+        "total": 0
+      },
+      "celeb_df": {
+        "path": "data\\image\\celeb_df",
+        "real": 800,
+        "fake": 800,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "ok",
+        "total": 1600,
+        "imbalance_ratio": 1.0
+      },
+      "dfdc": {
+        "path": "data\\image\\dfdc",
+        "real": 0,
+        "fake": 0,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "empty",
+        "total": 0
+      }
+    },
+    "video": {
+      "faceforensics_pp": {
+        "path": "data\\video\\faceforensics_pp",
+        "real": 0,
+        "fake": 0,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "empty",
+        "total": 0
+      },
+      "celeb_df": {
+        "path": "data\\video\\celeb_df",
+        "real": 150,
+        "fake": 150,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "ok",
+        "total": 300,
+        "imbalance_ratio": 1.0
+      },
+      "dfdc": {
+        "path": "data\\video\\dfdc",
+        "real": 0,
+        "fake": 0,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "empty",
+        "total": 0
+      }
+    },
+    "audio": {
+      "asvspoof": {
+        "path": "data\\audio\\asvspoof",
+        "real": 1000,
+        "fake": 1000,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "ok",
+        "total": 2000,
+        "imbalance_ratio": 1.0
+      },
+      "fakeavceleb": {
+        "path": "data\\audio\\fakeavceleb",
+        "real": 0,
+        "fake": 0,
+        "corrupted_files": [],
+        "invalid_format_files": [],
+        "status": "empty",
+        "total": 0
+      }
+    }
+  },
+  "warnings": [
+    "Empty dataset: data\\image\\faceforensics_pp",
+    "Empty dataset: data\\image\\dfdc",
+    "Empty dataset: data\\video\\faceforensics_pp",
+    "Empty dataset: data\\video\\dfdc",
+    "Empty dataset: data\\audio\\fakeavceleb"
+  ],
+  "errors": [],
+  "totals": {
+    "valid_files": 3900,
+    "corrupted_files": 0,
+    "invalid_format_files": 0
+  }
+}

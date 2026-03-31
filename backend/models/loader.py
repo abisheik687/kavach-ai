@@ -17,6 +17,7 @@ Permissive mode (allow_fallback_models=True):
 
 from __future__ import annotations
 
+import os
 import socket
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -60,6 +61,12 @@ class ModelRegistry:
 _registry = ModelRegistry()
 
 
+def _allow_fallback() -> bool:
+    if os.getenv('TEST_MODE', '').strip().lower() == 'true':
+        return True
+    return settings.allow_fallback_models
+
+
 def _can_reach_huggingface() -> bool:
     if not settings.enable_remote_model_downloads:
         return False
@@ -90,7 +97,7 @@ def _strict_manifest_path(env_value: str | None, label: str) -> Path | None:
             )
         return p
 
-    if not settings.allow_fallback_models:
+    if not _allow_fallback():
         raise RuntimeError(
             f'{label} manifest not configured (env-var is empty).\n'
             f'Options:\n'

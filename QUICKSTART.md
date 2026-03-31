@@ -1,352 +1,141 @@
-# 🚀 KAVACH-AI Quick Start Guide
+# KAVACH-AI Quick Start
 
-## ✅ Server Status: RUNNING
+This project is now centered around one active product path:
 
-The KAVACH-AI backend is now running on **http://localhost:8000**
+- Frontend: React + Vite upload/results app
+- Backend: FastAPI service with `GET /`, `GET /health`, `POST /analyse`
+- Training: local multimodal pipeline under `training/`
 
----
+## 1. Install dependencies
 
-## 📍 Access Points
+Backend:
 
-### 1. **API Documentation (Swagger UI)**
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -r backend\requirements.txt
+pip install -r training\requirements.txt
 ```
+
+Frontend:
+
+```powershell
+cd frontend
+npm install
+cd ..
+```
+
+## 2. Prepare datasets
+
+Create or verify the expected layout:
+
+```powershell
+python training\datasets\acquire_datasets.py --status
+```
+
+Put real public datasets under these folders:
+
+- `data/image/faceforensics_pp/{real,fake}`
+- `data/image/celeb_df/{real,fake}`
+- `data/image/dfdc/{real,fake}`
+- `data/video/faceforensics_pp/{real,fake}`
+- `data/video/dfdc/{real,fake}`
+- `data/audio/asvspoof/{real,fake}`
+- `data/audio/fakeavceleb/{real,fake}`
+
+If you already extracted a labeled local folder elsewhere, import it:
+
+```powershell
+python training\datasets\acquire_datasets.py --import-modality image --import-dataset celeb_df --from-path D:\datasets\celeb_df
+```
+
+Validate before training:
+
+```powershell
+python training\datasets\validate_dataset.py
+```
+
+## 3. Train the first real submission model
+
+Start with one seed:
+
+```powershell
+python training\train_all.py --modality all --seeds 42 --cycles 1
+python training\select_best_model.py
+```
+
+If that completes in time, add one more seed:
+
+```powershell
+python training\train_all.py --modality all --seeds 42 1337 --cycles 1
+python training\select_best_model.py
+```
+
+`training\train_all.py` writes the best `metadata.json` paths into the project `.env`.
+
+Recommended submission-safe backbones already supported by the training stack:
+
+- image: `convnext_base`
+- image alternative: `swinv2_small_window16_256`
+- video: `r2plus1d_18`
+- audio: `audio_spectrogram_resnet18`
+- audio alternative: `audio_spectrogram_convnext_tiny`
+
+## 4. Start the backend in strict trained-model mode
+
+Normal runtime should use trained artifacts only.
+
+```powershell
+cd backend
+uvicorn main:app --reload
+```
+
+Smoke checks:
+
+```powershell
+curl http://localhost:8000/
+curl http://localhost:8000/health
+```
+
+FastAPI docs:
+
+```text
 http://localhost:8000/docs
 ```
-Interactive API documentation where you can:
-- Test all endpoints
-- View request/response formats
-- Execute API calls directly
 
-### 2. **ReDoc Documentation**
-```
-http://localhost:8000/redoc
-```
-Alternative documentation format with better readability
+## 5. Start the frontend
 
-### 3. **Health Check**
-```bash
-curl http://localhost:8000/health
+```powershell
+cd frontend
+npm run dev
 ```
 
-### 4. **WebSocket Endpoint**
-```
-ws://localhost:8000/ws
-```
-Real-time updates for:
-- Detection results
-- Alert notifications
-- System status
+Default frontend URL:
 
-### 5. **Prometheus Metrics**
-```
-http://localhost:8000/metrics
-```
-System performance and monitoring metrics
-
----
-
-## 🧪 Quick API Tests
-
-### Test 1: Root Endpoint
-```bash
-curl http://localhost:8000/
+```text
+http://localhost:5173
 ```
 
-### Test 2: Health Check
-```bash
-curl http://localhost:8000/health
+## 6. Run active tests
+
+Active tests use fallback only in test mode:
+
+```powershell
+$env:TEST_MODE='true'
+python -m pytest
 ```
 
-### Test 3: Available API Paths
-```bash
-curl -s http://localhost:8000/openapi.json | python -m json.tool | grep -A 2 '"paths"'
-```
+## 7. Submission checklist
 
----
+- Backend starts with trained manifest env vars set
+- Frontend uploads image, video, and audio successfully
+- `python training\datasets\validate_dataset.py` reports no empty class folders
+- `python training\select_best_model.py` prints the selected best artifacts
+- You have 6 to 9 demo samples with recorded predictions and screenshots
 
-## 🎯 Core API Endpoints
+## Notes
 
-### 1. **Audio Deepfake Detection** (`POST /api/audio`)
-Detect deepfakes in audio files/calls
-
-**Example:**
-```bash
-curl -X POST "http://localhost:8000/api/audio/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{"audio_url": "https://example.com/audio.wav"}'
-```
-
-### 2. **Video Deepfake Detection** (`POST /api/live-video`)
-Analyze video streams for deepfakes
-
-**Example:**
-```bash
-curl -X POST "http://localhost:8000/api/live-video/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{"video_url": "https://example.com/video.mp4"}'
-```
-
-### 3. **Social Media Analysis** (`POST /api/social`)
-Detect deepfakes on social media posts
-
-**Example:**
-```bash
-curl -X POST "http://localhost:8000/api/social/scan" \
-  -H "Content-Type: application/json" \
-  -d '{"post_url": "https://twitter.com/user/post/123"}'
-```
-
-### 4. **Unified Scanner** (`POST /api/scan`)
-Comprehensive multi-modal analysis
-
-**Example:**
-```bash
-curl -X POST "http://localhost:8000/api/scan/comprehensive" \
-  -H "Content-Type: application/json" \
-  -d '{"media_url": "https://example.com/media"}'
-```
-
-### 5. **Interview Proctoring** (`POST /api/interview`)
-Real-time interview deepfake detection
-
-**Example:**
-```bash
-curl -X POST "http://localhost:8000/api/interview/start" \
-  -H "Content-Type: application/json" \
-  -d '{"interview_id": "test-001"}'
-```
-
-### 6. **Alerts Management** (`GET/POST /api/alerts`)
-View and manage detection alerts
-
-**Example:**
-```bash
-curl http://localhost:8000/api/alerts/
-```
-
-### 7. **Detection History** (`GET /api/detections`)
-View past detection results
-
-**Example:**
-```bash
-curl "http://localhost:8000/api/detections/?limit=10"
-```
-
----
-
-## 🔌 WebSocket Usage
-
-### Connect via JavaScript:
-```javascript
-const ws = new WebSocket('ws://localhost:8000/ws');
-
-ws.onopen = () => {
-  console.log('Connected to KAVACH-AI');
-  
-  // Subscribe to alerts
-  ws.send(JSON.stringify({
-    type: 'subscribe',
-    channels: ['alerts', 'detections']
-  }));
-};
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log('Received:', data);
-  
-  if (data.type === 'detection') {
-    console.log(`Deepfake detected! Confidence: ${data.confidence}`);
-  }
-};
-
-// Send frame for real-time analysis
-ws.send(JSON.stringify({
-  type: 'frame',
-  data: 'base64_encoded_frame_data'
-}));
-```
-
-### Ping/Pong for Keep-Alive:
-```javascript
-// Send ping every 30 seconds
-setInterval(() => {
-  ws.send(JSON.stringify({ type: 'ping' }));
-}, 30000);
-```
-
----
-
-## 🧪 Testing with Python
-
-### Install dependencies:
-```bash
-pip install requests websockets
-```
-
-### Example: Detect audio deepfake
-```python
-import requests
-import json
-
-# Analyze audio URL
-response = requests.post(
-    'http://localhost:8000/api/audio/analyze',
-    json={
-        'audio_url': 'https://example.com/sample.wav'
-    }
-)
-
-print(response.json())
-```
-
-### Example: WebSocket real-time detection
-```python
-import asyncio
-import websockets
-import json
-
-async def detect():
-    uri = "ws://localhost:8000/ws"
-    async with websockets.connect(uri) as ws:
-        # Subscribe to alerts
-        await ws.send(json.dumps({
-            'type': 'subscribe',
-            'channels': ['alerts']
-        }))
-        
-        # Receive messages
-        async for message in ws:
-            data = json.loads(message)
-            print(f"Alert: {data}")
-            
-            if data.get('type') == 'detection':
-                print(f"Deepfake detected! Confidence: {data['confidence']}")
-
-asyncio.run(detect())
-```
-
----
-
-## 📊 System Monitoring
-
-### View Prometheus Metrics:
-```bash
-curl http://localhost:8000/metrics
-```
-
-### Key Metrics:
-- `kavach_detections_total` - Total detections
-- `kavach_false_positives` - False positive count
-- `kavach_processing_time_seconds` - Detection latency
-- `kavach_active_websockets` - Connected clients
-- `kavach_streams_processed` - Streams analyzed
-
----
-
-## 🛑 Stopping the Server
-
-### Find the process:
-```bash
-# Windows
-netstat -ano | findstr :8000
-
-# Linux/macOS
-lsof -i :8000
-```
-
-### Kill the process:
-```bash
-# Windows (replace PID with actual process ID)
-taskkill /PID <PID> /F
-
-# Linux/macOS
-kill -9 <PID>
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: "Address already in use"
-```bash
-# Find and kill existing process
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-```
-
-### Issue: Module import errors
-```bash
-# Reinstall dependencies
-pip install -r requirements.txt
-```
-
-### Issue: Database locked
-```bash
-# Delete lock file if exists
-del data\kavach.db.lock 2>nul
-```
-
-### Issue: Out of memory
-```bash
-# Restart with less workers
-uvicorn backend.main:app --workers 1 --host 0.0.0.0 --port 8000
-```
-
----
-
-## 🎯 Next Steps
-
-1. **Access API Docs:** http://localhost:8000/docs
-2. **Try Sample Detection:** Use the `/api/scan/comprehensive` endpoint
-3. **Set Up Frontend:** Navigate to frontend directory and run `npm start`
-4. **Configure Alerts:** Set up Slack/email notifications
-5. **Load Models:** Download pre-trained models for better accuracy
-
----
-
-## 📞 API Examples
-
-### Audio Deepfake Detection
-```bash
-curl -X POST "http://localhost:8000/api/audio/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "audio_url": "https://example.com/voice_sample.wav",
-    "analyze_spectrogram": true,
-    "check_voiceprint": true
-  }'
-```
-
-### Video Deepfake Detection
-```bash
-curl -X POST "http://localhost:8000/api/live-video/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "video_url": "https://example.com/video.mp4",
-    "check_facial_features": true,
-    "check_blink_patterns": true
-  }'
-```
-
-### Unified Multi-Modal Scan
-```bash
-curl -X POST "http://localhost:8000/api/scan/comprehensive" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "media_url": "https://example.com/media.mp4",
-    "modules": ["video", "audio", "metadata"],
-    "confidence_threshold": 0.7
-  }'
-```
-
----
-
-## ✅ System Status
-
-- **Backend:** ✅ Running on port 8000
-- **API Docs:** ✅ http://localhost:8000/docs
-- **WebSocket:** ✅ ws://localhost:8000/ws
-- **Database:** ✅ SQLite (async)
-- **Detection Pipeline:** ✅ Operational
-
-**KAVACH-AI is ready to use! 🎉**
+- This repo is fully local and does not require inference APIs.
+- Official datasets still need manual download or approved access from their source sites.
+- If `ffmpeg` is not on `PATH`, set `FFMPEG_BINARY` in `.env` or place a binary under `tools/`.

@@ -1,75 +1,105 @@
+# KAVACH-AI: Production Training Configuration
+# Submission-safe local training stack:
+# - image: ConvNeXt first, SwinV2 optional if compute allows
+# - video: r2plus1d_18
+# - audio: spectrogram classifier (ResNet by default)
+# Keep the backend runtime unchanged and load trained artifacts through metadata.json manifests.
+
 seed: 42
-output_root: training/artifacts
-manifest_root: training/manifests
+output_root: "training/artifacts"
+manifest_root: "training/manifests"
+
+# Strict split ratios to ensure zero leakage
 train_ratio: 0.70
 val_ratio: 0.15
 test_ratio: 0.15
 
 datasets:
-  # Image datasets (frames extracted from video)
-  - name: faceforensics_pp
-    path: data/image/faceforensics_pp
-    modalities: [image]
-  - name: celeb_df
-    path: data/image/celeb_df
-    modalities: [image]
-  - name: dfdc
-    path: data/image/dfdc
-    modalities: [image]
-
-  # Audio datasets
-  - name: asvspoof
-    path: data/audio/asvspoof
-    modalities: [audio]
-  - name: fakeavceleb
-    path: data/audio/fakeavceleb
-    modalities: [audio]
-
-  # Video datasets
-  - name: faceforensics_pp_video
-    path: data/video/faceforensics_pp
-    modalities: [video]
-  - name: dfdc_video
-    path: data/video/dfdc
-    modalities: [video]
+  # Primary image sources for the deadline run.
+  # If OpenFake or another curated image source is available locally, fold it into one of these
+  # labeled roots or add a new dataset entry with modalities: ["image"].
+  - name: "faceforensics_pp"
+    path: "data/image/faceforensics_pp"
+    modalities: [ "image" ]
+  - name: "celeb_df"
+    path: "data/image/celeb_df"
+    modalities: [ "image" ]
+  - name: "dfdc_image"
+    path: "data/image/dfdc"
+    modalities: [ "image" ]
+  - name: "faceforensics_pp_video"
+    path: "data/video/faceforensics_pp"
+    modalities: [ "video" ]
+  - name: "celeb_df_video"
+    path: "data/video/celeb_df"
+    modalities: [ "video" ]
+  - name: "dfdc_video"
+    path: "data/video/dfdc"
+    modalities: [ "video" ]
+  - name: "asvspoof"
+    path: "data/audio/asvspoof"
+    modalities: [ "audio" ]
+  - name: "fakeavceleb"
+    path: "data/audio/fakeavceleb"
+    modalities: [ "audio" ]
+  - name: "hard_examples_image"
+    path: "data/hard_examples/image"
+    modalities: [ "image" ]
+  - name: "hard_examples_video"
+    path: "data/hard_examples/video"
+    modalities: [ "video" ]
+  - name: "hard_examples_audio"
+    path: "data/hard_examples/audio"
+    modalities: [ "audio" ]
 
 image:
-  architecture: efficientnet_b4
-  pretrained: true
-  batch_size: 16
-  epochs: 5
+  architecture: "convnext_base" # Recommended deadline default. Optional alternative: swinv2_small_window16_256
+  batch_size: 16 # Deadline-safe default for CPU / weak GPU machines
+  epochs: 12
   learning_rate: 0.0001
-  weight_decay: 0.0001
+  weight_decay: 0.05
+  pretrained: true
   image_size: 224
   num_workers: 0
-  early_stop_patience: 3
+  grad_clip: 1.0
+  early_stop_patience: 6
   export_onnx: true
+  
+  # Image Specific Augmentations added in pipeline
+  # blur, jpeg compression, noise handled in multimodal_pipeline.py
 
 audio:
-  architecture: audio_spectrogram_efficientnet_b0
-  pretrained: true
+  architecture: "audio_spectrogram_resnet18" # Stable default. Optional alternative: audio_spectrogram_convnext_tiny
   batch_size: 16
-  epochs: 5
-  learning_rate: 0.0001
-  weight_decay: 0.0001
-  image_size: 224
+  epochs: 10
+  learning_rate: 0.0005
+  weight_decay: 0.01
+  pretrained: true
   sample_rate: 16000
   max_audio_seconds: 4
   n_mels: 128
   num_workers: 0
-  early_stop_patience: 3
+  grad_clip: 1.0
+  early_stop_patience: 5
   export_onnx: true
 
+  # Audio Specific Augmentations added in pipeline
+  # noise, pitch, compression
+
 video:
-  architecture: r3d_18
+  architecture: "r2plus1d_18"
+  batch_size: 4 # Conservative default for local machines
+  epochs: 8
+  learning_rate: 0.0001
+  weight_decay: 0.05
   pretrained: true
-  batch_size: 4
-  epochs: 4
-  learning_rate: 0.00005
-  weight_decay: 0.0001
   image_size: 112
-  clip_frames: 16
+  clip_frames: 32 # Upgraded from 16
   clip_stride: 4
   num_workers: 0
-  early_stop_patience: 2
+  grad_clip: 2.0
+  early_stop_patience: 5
   export_onnx: true
+  
+  # Video Specific Augmentations
+  # random frame sampling + temporal clips handled in pipeline

@@ -79,6 +79,36 @@ class RunConfig:
     video: ModalityConfig
 
 
+class RandomJPEGCompression:
+    def __init__(self, quality_range: tuple[int, int] = (45, 95), probability: float = 0.35) -> None:
+        self.quality_range = quality_range
+        self.probability = probability
+
+    def __call__(self, image: Image.Image) -> Image.Image:
+        if random.random() >= self.probability:
+            return image
+        from io import BytesIO
+
+        quality = random.randint(*self.quality_range)
+        buffer = BytesIO()
+        image.save(buffer, format='JPEG', quality=quality)
+        buffer.seek(0)
+        return Image.open(buffer).convert('RGB')
+
+
+class AdditiveGaussianNoise:
+    def __init__(self, sigma_range: tuple[float, float] = (0.0, 0.035), probability: float = 0.35) -> None:
+        self.sigma_range = sigma_range
+        self.probability = probability
+
+    def __call__(self, tensor: torch.Tensor) -> torch.Tensor:
+        if random.random() >= self.probability:
+            return tensor
+        sigma = random.uniform(*self.sigma_range)
+        noise = torch.randn_like(tensor) * sigma
+        return torch.clamp(tensor + noise, -3.0, 3.0)
+
+
 def _read_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding='utf-8'))
 
@@ -127,6 +157,50 @@ def infer_group_id(path: Path) -> str:
     return f'{parent}:{stem}'
 
 
+def _fallback_split_indices(
+    indices: np.ndarray,
+    train_ratio: float,
+    val_ratio: float,
+    test_ratio: float,
+    seed: int,
+) -> dict[int, str]:
+    shuffled = np.array(indices, copy=True)
+    rng = np.random.default_rng(seed)
+    rng.shuffle(shuffled)
+
+    total = len(shuffled)
+    if total == 0:
+        return {}
+    if total == 1:
+        return {int(shuffled[0]): 'train'}
+    if total == 2:
+        return {int(shuffled[0]): 'train', int(shuffled[1]): 'val'}
+
+    train_count = max(1, int(round(total * train_ratio)))
+    val_count = max(1, int(round(total * val_ratio)))
+    test_count = max(1, total - train_count - val_count)
+
+    while train_count + val_count + test_count > total:
+        if train_count >= val_count and train_count >= test_count and train_count > 1:
+            train_count -= 1
+        elif val_count >= test_count and val_count > 1:
+            val_count -= 1
+        else:
+            test_count -= 1
+
+    while train_count + val_count + test_count < total:
+        train_count += 1
+
+    split_map: dict[int, str] = {}
+    for idx in shuffled[:train_count]:
+        split_map[int(idx)] = 'train'
+    for idx in shuffled[train_count:train_count + val_count]:
+        split_map[int(idx)] = 'val'
+    for idx in shuffled[train_count + val_count:]:
+        split_map[int(idx)] = 'test'
+    return split_map
+
+
 def build_manifest(config: RunConfig, modality: str) -> Path:
     manifest_root = Path(config.manifest_root)
     manifest_root.mkdir(parents=True, exist_ok=True)
@@ -168,21 +242,50 @@ def build_manifest(config: RunConfig, modality: str) -> Path:
     labels = np.array([row['label'] for row in rows])
     indices = np.arange(len(rows))
 
-    first_split = GroupShuffleSplit(n_splits=1, train_size=config.train_ratio, random_state=config.seed)
-    train_idx, temp_idx = next(first_split.split(indices, labels, groups))
+    unique_groups = np.unique(groups)
+    if len(unique_groups) < 3 or len(rows) < 6:
+        split_map = _fallback_split_indices(
+            indices,
+            train_ratio=config.train_ratio,
+            val_ratio=config.val_ratio,
+            test_ratio=config.test_ratio,
+            seed=config.seed,
+        )
+    else:
+        try:
+            first_split = GroupShuffleSplit(n_splits=1, train_size=config.train_ratio, random_state=config.seed)
+            train_idx, temp_idx = next(first_split.split(indices, labels, groups))
 
-    remaining = config.val_ratio + config.test_ratio
-    val_fraction_of_temp = 0.5 if remaining == 0 else config.val_ratio / remaining
-    second_split = GroupShuffleSplit(n_splits=1, train_size=val_fraction_of_temp, random_state=config.seed + 1)
-    val_rel_idx, test_rel_idx = next(
-        second_split.split(indices[temp_idx], labels[temp_idx], groups[temp_idx])
-    )
+            remaining = config.val_ratio + config.test_ratio
+            val_fraction_of_temp = 0.5 if remaining == 0 else config.val_ratio / remaining
 
-    split_map = {idx: 'train' for idx in train_idx}
-    for idx in temp_idx[val_rel_idx]:
-        split_map[idx] = 'val'
-    for idx in temp_idx[test_rel_idx]:
-        split_map[idx] = 'test'
+            if len(temp_idx) < 2 or len(np.unique(groups[temp_idx])) < 2:
+                split_map = _fallback_split_indices(
+                    indices,
+                    train_ratio=config.train_ratio,
+                    val_ratio=config.val_ratio,
+                    test_ratio=config.test_ratio,
+                    seed=config.seed,
+                )
+            else:
+                second_split = GroupShuffleSplit(n_splits=1, train_size=val_fraction_of_temp, random_state=config.seed + 1)
+                val_rel_idx, test_rel_idx = next(
+                    second_split.split(indices[temp_idx], labels[temp_idx], groups[temp_idx])
+                )
+
+                split_map = {int(idx): 'train' for idx in train_idx}
+                for idx in temp_idx[val_rel_idx]:
+                    split_map[int(idx)] = 'val'
+                for idx in temp_idx[test_rel_idx]:
+                    split_map[int(idx)] = 'test'
+        except ValueError:
+            split_map = _fallback_split_indices(
+                indices,
+                train_ratio=config.train_ratio,
+                val_ratio=config.val_ratio,
+                test_ratio=config.test_ratio,
+                seed=config.seed,
+            )
 
     for idx, row in enumerate(rows):
         row['split'] = split_map[idx]
@@ -206,12 +309,18 @@ class ImageDataset(Dataset):
         if train:
             self.transform = transforms.Compose(
                 [
+                    RandomJPEGCompression(),
                     transforms.Resize((image_size, image_size)),
+                    transforms.RandomResizedCrop(image_size, scale=(0.82, 1.0)),
                     transforms.RandomHorizontalFlip(),
                     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.15, hue=0.02),
                     transforms.RandomApply([transforms.GaussianBlur(3, sigma=(0.1, 1.6))], p=0.2),
+                    transforms.RandomAdjustSharpness(sharpness_factor=2, p=0.2),
+                    transforms.RandomAutocontrast(p=0.2),
+                    transforms.ToTensor(),
+                    AdditiveGaussianNoise(),
+                    transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
                 ]
-                + common[1:]
             )
         else:
             self.transform = transforms.Compose(common)
@@ -242,7 +351,23 @@ class AudioDataset(Dataset):
         if audio.shape[0] < max_samples:
             audio = np.pad(audio, (0, max_samples - audio.shape[0]))
         if self.train and random.random() < 0.4:
-            audio = audio + np.random.normal(0, 0.003, size=audio.shape[0])
+            audio = audio + np.random.normal(0, 0.005, size=audio.shape[0])
+        if self.train and random.random() < 0.25:
+            steps = random.uniform(-1.5, 1.5)
+            shifted = librosa.effects.pitch_shift(audio, sr=self.cfg.sample_rate, n_steps=steps)
+            audio = shifted[:max_samples]
+            if audio.shape[0] < max_samples:
+                audio = np.pad(audio, (0, max_samples - audio.shape[0]))
+        if self.train and random.random() < 0.2:
+            companded = np.sign(audio) * np.sqrt(np.abs(audio))
+            audio = np.asarray(companded, dtype=np.float32)
+        if self.train and random.random() < 0.2:
+            downsampled = librosa.resample(audio, orig_sr=self.cfg.sample_rate, target_sr=8000)
+            audio = librosa.resample(downsampled, orig_sr=8000, target_sr=self.cfg.sample_rate)
+            audio = audio[:max_samples]
+            if audio.shape[0] < max_samples:
+                audio = np.pad(audio, (0, max_samples - audio.shape[0]))
+            
         mel = librosa.feature.melspectrogram(
             y=audio,
             sr=self.cfg.sample_rate,
@@ -252,6 +377,17 @@ class AudioDataset(Dataset):
         )
         log_mel = librosa.power_to_db(mel + 1e-6).astype(np.float32)
         log_mel = (log_mel - log_mel.min()) / max(log_mel.max() - log_mel.min(), 1e-6)
+        
+        if self.train and random.random() < 0.5:
+            # SpecAugment: Frequency Masking
+            f_mask = random.randint(1, max(1, self.cfg.n_mels // 5))
+            f0 = random.randint(0, self.cfg.n_mels - f_mask)
+            log_mel[f0:f0+f_mask, :] = 0
+            # SpecAugment: Time Masking
+            t_mask = random.randint(1, max(1, log_mel.shape[1] // 5))
+            t0 = random.randint(0, log_mel.shape[1] - t_mask)
+            log_mel[:, t0:t0+t_mask] = 0
+
         tensor = torch.from_numpy(log_mel).unsqueeze(0).repeat(3, 1, 1)
         return tensor
 
@@ -276,6 +412,11 @@ class VideoDataset(Dataset):
 
     def _load_clip(self, path: str) -> torch.Tensor:
         capture = cv2.VideoCapture(path)
+        total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        if self.train and total_frames > self.cfg.clip_frames * self.cfg.clip_stride:
+            start_frame = random.randint(0, total_frames - self.cfg.clip_frames * self.cfg.clip_stride - 1)
+            capture.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+            
         frames: list[np.ndarray] = []
         idx = 0
         try:
@@ -288,6 +429,9 @@ class VideoDataset(Dataset):
                     frame = cv2.resize(frame, (self.cfg.image_size, self.cfg.image_size))
                     if self.train and random.random() < 0.3:
                         frame = cv2.GaussianBlur(frame, (3, 3), 0)
+                    if self.train and random.random() < 0.25:
+                        noise = np.random.normal(0, 5.0, size=frame.shape)
+                        frame = np.clip(frame.astype(np.float32) + noise, 0, 255).astype(np.uint8)
                     frames.append(frame)
                 idx += 1
         finally:
@@ -329,6 +473,61 @@ def create_test_dataloader(manifest_path: Path, modality: str, cfg: ModalityConf
     else:
         dataset = VideoDataset(rows, cfg, train=False)
     return DataLoader(dataset, batch_size=cfg.batch_size, shuffle=False, num_workers=cfg.num_workers)
+
+
+def audit_dataset_quality(config: RunConfig, modality: str) -> dict[str, Any]:
+    manifest_path = build_manifest(config, modality)
+    with manifest_path.open('r', newline='', encoding='utf-8') as handle:
+        rows = list(csv.DictReader(handle))
+
+    summary: dict[str, Any] = {
+        'modality': modality,
+        'manifest_path': str(manifest_path),
+        'total_samples': len(rows),
+        'datasets': {},
+        'warnings': [],
+        'corrupted_files': [],
+    }
+
+    for row in rows:
+        dataset_entry = summary['datasets'].setdefault(
+            row['dataset'],
+            {'total': 0, 'real': 0, 'fake': 0, 'splits': {'train': 0, 'val': 0, 'test': 0}},
+        )
+        dataset_entry['total'] += 1
+        dataset_entry['real' if int(row['label']) == 0 else 'fake'] += 1
+        dataset_entry['splits'][row['split']] = dataset_entry['splits'].get(row['split'], 0) + 1
+
+        path = Path(row['path'])
+        try:
+            if modality == 'image':
+                with Image.open(path) as image:
+                    image.verify()
+            elif modality == 'audio':
+                sf.info(str(path))
+            else:
+                capture = cv2.VideoCapture(str(path))
+                ok = capture.isOpened() and int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0) > 0
+                capture.release()
+                if not ok:
+                    raise ValueError('Unreadable video')
+        except Exception:
+            summary['corrupted_files'].append(str(path))
+
+    for dataset_name, dataset_entry in summary['datasets'].items():
+        real_count = dataset_entry['real']
+        fake_count = dataset_entry['fake']
+        if min(real_count, fake_count) == 0:
+            summary['warnings'].append(f'{dataset_name}: one class is missing entirely')
+            continue
+        imbalance = max(real_count, fake_count) / max(min(real_count, fake_count), 1)
+        dataset_entry['imbalance_ratio'] = round(float(imbalance), 3)
+        if imbalance > 1.5:
+            summary['warnings'].append(f'{dataset_name}: class imbalance is {imbalance:.2f}:1')
+
+    if summary['corrupted_files']:
+        summary['warnings'].append(f'{len(summary["corrupted_files"])} corrupted files detected')
+    return summary
 
 
 def create_dataloaders(manifest_path: Path, modality: str, cfg: ModalityConfig) -> dict[str, DataLoader]:
@@ -498,6 +697,7 @@ def _write_misclassifications(
 def train_modality(config: RunConfig, modality: str) -> dict[str, Any]:
     cfg = getattr(config, modality)
     manifest_path = build_manifest(config, modality)
+    dataset_audit = audit_dataset_quality(config, modality)
     loaders = create_dataloaders(manifest_path, modality, cfg)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = _build_model(modality, cfg).to(device)
@@ -535,6 +735,7 @@ def train_modality(config: RunConfig, modality: str) -> dict[str, Any]:
     manifest_copy = output_dir / 'manifest.csv'
     manifest_copy.write_text(manifest_path.read_text(encoding='utf-8'), encoding='utf-8')
     (output_dir / 'history.json').write_text(json.dumps(history, indent=2), encoding='utf-8')
+    (output_dir / 'dataset_audit.json').write_text(json.dumps(dataset_audit, indent=2), encoding='utf-8')
 
     preprocessing = {
         'image_size': cfg.image_size,
@@ -583,6 +784,7 @@ def train_modality(config: RunConfig, modality: str) -> dict[str, Any]:
         'best_val_auc': best_val_auc,
         'test_metrics': test_metrics,
         'cross_dataset': cross_dataset,
+        'dataset_audit_path': str(output_dir / 'dataset_audit.json'),
     }
     (output_dir / 'report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     return report

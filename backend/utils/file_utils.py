@@ -75,6 +75,9 @@ def cleanup_path(path: str | Path) -> None:
             target.unlink()
         except FileNotFoundError:
             pass
+        except PermissionError:
+            # Windows can keep short-lived handles on temp files after a response completes.
+            return
         parent = target.parent
         if parent != settings.temp_dir and parent.exists() and parent.name.startswith('kavach_'):
             shutil.rmtree(parent, ignore_errors=True)
@@ -94,4 +97,24 @@ def clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
 def find_ffmpeg_binary() -> str | None:
     if settings.ffmpeg_binary and Path(settings.ffmpeg_binary).exists():
         return settings.ffmpeg_binary
-    return shutil.which('ffmpeg')
+    system_binary = shutil.which('ffmpeg')
+    if system_binary:
+        return system_binary
+
+    project_root = Path(__file__).resolve().parents[2]
+    candidate_roots = [
+        project_root / 'tools',
+        project_root / 'third_party',
+        project_root / 'bin',
+    ]
+    candidate_names = ('ffmpeg.exe', 'ffmpeg')
+
+    for root in candidate_roots:
+        if not root.exists():
+            continue
+        for name in candidate_names:
+            matches = sorted(root.rglob(name))
+            if matches:
+                return str(matches[0])
+
+    return None

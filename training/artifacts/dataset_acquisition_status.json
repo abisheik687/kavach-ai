@@ -1,0 +1,57 @@
+{
+  "image": {
+    "faceforensics_pp": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\image\\faceforensics_pp",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://github.com/ondyari/FaceForensics"
+    },
+    "celeb_df": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\image\\celeb_df",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://github.com/yuezunli/celeb-deepfakeforensics"
+    },
+    "dfdc": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\image\\dfdc",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://www.kaggle.com/c/deepfake-detection-challenge/data"
+    }
+  },
+  "video": {
+    "faceforensics_pp": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\video\\faceforensics_pp",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://github.com/ondyari/FaceForensics"
+    },
+    "dfdc": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\video\\dfdc",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://www.kaggle.com/c/deepfake-detection-challenge/data"
+    }
+  },
+  "audio": {
+    "asvspoof": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\audio\\asvspoof",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://www.asvspoof.org/"
+    },
+    "fakeavceleb": {
+      "root": "E:\\Users\\Abisheik\\downloads\\deepfake system\\deepfake system\\data\\audio\\fakeavceleb",
+      "real_count": 0,
+      "fake_count": 0,
+      "ready": false,
+      "official_source": "https://github.com/DASH-Lab/FakeAVCeleb"
+    }
+  }
+}

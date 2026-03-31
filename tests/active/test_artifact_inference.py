@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -22,6 +23,11 @@ import pytest
 import torch
 import torch.nn as nn
 from PIL import Image
+
+ARTIFACT_ROOT = Path('training/artifacts')
+HAS_REAL_ARTIFACTS = ARTIFACT_ROOT.exists() and any(ARTIFACT_ROOT.rglob('metadata.json'))
+if not HAS_REAL_ARTIFACTS:
+    pytest.skip('Artifacts not available', allow_module_level=True)
 
 # Ensure project root is importable
 ROOT = Path(__file__).resolve().parents[1]

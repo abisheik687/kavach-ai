@@ -10,7 +10,9 @@ Provides:
 from __future__ import annotations
 
 import io
+import os
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Callable
 from unittest.mock import MagicMock
@@ -19,6 +21,11 @@ import numpy as np
 import pytest
 import soundfile as sf
 from PIL import Image
+
+
+TEMP_DIR = Path(os.getenv('TEMP_DIR', Path(__file__).resolve().parents[1] / 'temp')).resolve()
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
+tempfile.tempdir = str(TEMP_DIR)
 
 
 # ─── Synthetic media fixtures ─────────────────────────────────────────────────
@@ -44,16 +51,16 @@ def test_audio_bytes() -> bytes:
 
 
 @pytest.fixture(scope='session')
-def test_image_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    p = tmp_path_factory.mktemp('media') / 'test.jpg'
+def test_image_path() -> Path:
+    p = TEMP_DIR / f'test_{uuid.uuid4().hex}.jpg'
     img = Image.new('RGB', (128, 128), color=(80, 120, 160))
     img.save(str(p), format='JPEG')
     return p
 
 
 @pytest.fixture(scope='session')
-def test_audio_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    p = tmp_path_factory.mktemp('media') / 'test.wav'
+def test_audio_path() -> Path:
+    p = TEMP_DIR / f'test_{uuid.uuid4().hex}.wav'
     sr = 16000
     t = np.linspace(0, 2.0, sr * 2, dtype=np.float32)
     wave = 0.3 * np.sin(2 * np.pi * 440 * t)
@@ -62,10 +69,10 @@ def test_audio_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture(scope='session')
-def test_video_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def test_video_path() -> Path:
     """A tiny 10-frame AVI video."""
     import cv2
-    p = tmp_path_factory.mktemp('media') / 'test.avi'
+    p = TEMP_DIR / f'test_{uuid.uuid4().hex}.avi'
     writer = cv2.VideoWriter(str(p), cv2.VideoWriter_fourcc(*'XVID'), 10, (64, 64))
     for i in range(10):
         frame = np.full((64, 64, 3), i * 20, dtype=np.uint8)
