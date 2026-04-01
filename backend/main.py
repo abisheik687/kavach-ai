@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: mixed legacy/live routes, duplicate health handlers, undefined logger imports, SPA serving in the API process, and on-demand model loading promises that were never implemented.
-- Fixed now: single FastAPI runtime for upload analysis, lifespan-based model loading, consistent error envelopes, explicit CORS, and only the supported health/analyse routes.
+- Wrong before: startup only worked from the backend folder because imports were path-sensitive, and repo-root launches failed before the app could boot.
+- Fixed now: the API supports both package and local module execution, keeps the clean upload-analysis routing, and preserves the unified error envelope.
 """
 
 from __future__ import annotations
@@ -13,12 +13,20 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from config import settings
-from models.loader import model_lifespan
-from routers.analyse import router as analyse_router
-from routers.health import router as health_router
-from utils.file_utils import AppError
-from utils.logger import get_logger
+try:
+    from .config import settings
+    from .models.loader import model_lifespan
+    from .routers.analyse import router as analyse_router
+    from .routers.health import router as health_router
+    from .utils.file_utils import AppError
+    from .utils.logger import get_logger
+except ImportError:
+    from config import settings
+    from models.loader import model_lifespan
+    from routers.analyse import router as analyse_router
+    from routers.health import router as health_router
+    from utils.file_utils import AppError
+    from utils.logger import get_logger
 
 
 logger = get_logger(__name__)

@@ -1,20 +1,29 @@
 """
 Internal trace:
-- Wrong before: image analysis merged orchestration, face extraction, and response shaping across multiple services and dict payloads.
-- Fixed now: image uploads flow through a single preprocessing and ensemble path that returns the new response model.
+- Wrong before: this pipeline only imported under one cwd layout, so repo-root app launches failed before requests could reach it.
+- Fixed now: image analysis supports both package and backend-local execution without changing the response contract.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from config import settings
-from models.ensemble import combine_weighted_scores
-from models.loader import ModelRegistry
-from models.image_models import prepare_image
-from schemas.response import AnalysisResult, ModelScore
-from utils.file_utils import AppError, clamp
-from utils.runtime import run_inference
+try:
+    from ..config import settings
+    from ..models.ensemble import combine_weighted_scores
+    from ..models.loader import ModelRegistry
+    from ..models.image_models import prepare_image
+    from ..schemas.response import AnalysisResult, ModelScore
+    from ..utils.file_utils import AppError, clamp
+    from ..utils.runtime import run_inference
+except ImportError:
+    from config import settings
+    from models.ensemble import combine_weighted_scores
+    from models.loader import ModelRegistry
+    from models.image_models import prepare_image
+    from schemas.response import AnalysisResult, ModelScore
+    from utils.file_utils import AppError, clamp
+    from utils.runtime import run_inference
 
 
 async def analyse_image_file(file_path: Path, registry: ModelRegistry, validation) -> AnalysisResult:

@@ -1,4 +1,8 @@
 """
+Internal trace:
+- Wrong before: the temporal video adapter only imported from one cwd layout, which broke package-mode launches even before fallback aggregation could run.
+- Fixed now: the adapter supports both execution modes while preserving the same primary/fallback behavior.
+
 Open-source temporal video detector adapter.
 
 Primary path:
@@ -16,8 +20,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from config import settings
-from utils.file_utils import clamp
+try:
+    from ..config import settings
+    from ..utils.file_utils import clamp
+except ImportError:
+    from config import settings
+    from utils.file_utils import clamp
 
 
 @dataclass

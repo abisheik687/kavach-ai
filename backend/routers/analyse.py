@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: uploads were split across multiple endpoints with inconsistent validation, mixed JSON/file inputs, and live-analysis paths that hid cleanup failures.
-- Fixed now: one multipart upload endpoint validates files, writes temporary media safely, runs the correct pipeline, and always returns the documented JSON/error shape.
+- Wrong before: this router only imported correctly from the backend directory, so repo-root uvicorn launches failed before the API mounted.
+- Fixed now: the upload route works in both execution modes while keeping the same validation and cleanup behavior.
 """
 
 from __future__ import annotations
@@ -10,15 +10,26 @@ import time
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
 
-from config import settings
-from models.loader import get_model_registry
-from pipelines.audio_pipeline import analyse_audio_file
-from pipelines.image_pipeline import analyse_image_file
-from pipelines.video_pipeline import analyse_video_file
-from schemas.request import UploadValidationInfo, validate_upload
-from schemas.response import AnalysisResult
-from utils.file_utils import cleanup_path, persist_upload_to_temp
-from utils.runtime import run_analysis
+try:
+    from ..config import settings
+    from ..models.loader import get_model_registry
+    from ..pipelines.audio_pipeline import analyse_audio_file
+    from ..pipelines.image_pipeline import analyse_image_file
+    from ..pipelines.video_pipeline import analyse_video_file
+    from ..schemas.request import UploadValidationInfo, validate_upload
+    from ..schemas.response import AnalysisResult
+    from ..utils.file_utils import cleanup_path, persist_upload_to_temp
+    from ..utils.runtime import run_analysis
+except ImportError:
+    from config import settings
+    from models.loader import get_model_registry
+    from pipelines.audio_pipeline import analyse_audio_file
+    from pipelines.image_pipeline import analyse_image_file
+    from pipelines.video_pipeline import analyse_video_file
+    from schemas.request import UploadValidationInfo, validate_upload
+    from schemas.response import AnalysisResult
+    from utils.file_utils import cleanup_path, persist_upload_to_temp
+    from utils.runtime import run_analysis
 
 
 router = APIRouter(tags=['analysis'])

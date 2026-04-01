@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: uploads had no single request schema, weak MIME checking, and conflicting size limits across endpoints.
-- Fixed now: validation is centralized here with one Pydantic metadata model and shared file-type rules.
+- Wrong before: validation only imported from one cwd layout, which broke package-mode launches.
+- Fixed now: upload validation remains centralized but works from both repo-root and backend-local execution.
 """
 
 from __future__ import annotations
@@ -11,8 +11,12 @@ from pathlib import Path
 from fastapi import File, UploadFile
 from pydantic import BaseModel
 
-from config import settings
-from utils.file_utils import AppError, sniff_file_type
+try:
+    from ..config import settings
+    from ..utils.file_utils import AppError, sniff_file_type
+except ImportError:
+    from config import settings
+    from utils.file_utils import AppError, sniff_file_type
 
 
 SUPPORTED_TYPES: dict[str, str] = {

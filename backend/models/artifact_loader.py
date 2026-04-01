@@ -1,4 +1,8 @@
 """
+Internal trace:
+- Wrong before: artifact loading only imported in backend-local mode, so repo-root launches failed before trained manifests could even be resolved.
+- Fixed now: artifact inference keeps the same ONNX/PyTorch behavior but imports cleanly in both execution modes.
+
 KAVACH-AI Artifact Loader
 ==========================
 Loads trained model artifacts (model.pt / model.onnx) produced by
@@ -22,7 +26,10 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from utils.file_utils import clamp
+try:
+    from ..utils.file_utils import clamp
+except ImportError:
+    from utils.file_utils import clamp
 
 logger = logging.getLogger(__name__)
 

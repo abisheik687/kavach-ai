@@ -1,14 +1,17 @@
 """
 Internal trace:
-- Wrong before: duplicate health endpoints disagreed on payload shape and pulled in database/GPU checks unrelated to the new upload pipeline.
-- Fixed now: one fast health endpoint reports overall status and model slot readiness in the contract the frontend expects.
+- Wrong before: package-mode startup failed before the health route could import, which made diagnosis harder.
+- Fixed now: the health route imports cleanly in both execution modes and reports the corrected loaded model count.
 """
 
 from __future__ import annotations
 
 from fastapi import APIRouter
 
-from models.loader import get_model_registry
+try:
+    from ..models.loader import get_model_registry
+except ImportError:
+    from models.loader import get_model_registry
 
 
 router = APIRouter(tags=['health'])

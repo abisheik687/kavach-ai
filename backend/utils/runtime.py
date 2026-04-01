@@ -1,3 +1,9 @@
+"""
+Internal trace:
+- Wrong before: runtime helpers only imported from one cwd layout, so package-mode startup failed before timeouts and thread offloading could be used.
+- Fixed now: concurrency/timeouts behave the same, but the module imports safely from both repo-root and backend-local execution.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,9 +13,14 @@ from collections.abc import Awaitable, Callable
 from functools import partial
 from typing import TypeVar
 
-from config import settings
-from utils.file_utils import AppError
-from utils.logger import get_logger
+try:
+    from ..config import settings
+    from .file_utils import AppError
+    from .logger import get_logger
+except ImportError:
+    from config import settings
+    from utils.file_utils import AppError
+    from utils.logger import get_logger
 
 
 logger = get_logger(__name__)

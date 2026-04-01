@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: audio analysis was purely heuristic while claiming a RawNet/LCNN pipeline, and it mixed visualization logic with inference.
-- Fixed now: startup loads a Wav2Vec2-based detector when available and falls back to a transparent signal-based scorer when weights are unavailable.
+- Wrong before: the audio model module only imported correctly when run from one working directory, which broke app startup in package mode.
+- Fixed now: audio inference keeps the same detector/fallback behavior but imports cleanly from both repo-root and backend-local launches.
 """
 
 from __future__ import annotations
@@ -12,8 +12,12 @@ from typing import Callable
 import numpy as np
 from scipy import signal
 
-from config import settings
-from utils.file_utils import clamp
+try:
+    from ..config import settings
+    from ..utils.file_utils import clamp
+except ImportError:
+    from config import settings
+    from utils.file_utils import clamp
 
 
 def _resample(audio: np.ndarray, sample_rate: int, target_rate: int = 16000) -> np.ndarray:

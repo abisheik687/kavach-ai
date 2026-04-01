@@ -1,14 +1,17 @@
 """
 Internal trace:
-- Wrong before: ensemble logic existed in several places with incompatible thresholds and verdict names such as SUSPICIOUS.
-- Fixed now: one weighted-voting module implements the required fake threshold and uncertainty rule for image and video analysis.
+- Wrong before: ensemble scoring also depended on cwd-sensitive imports, so package execution could fail before any route loaded.
+- Fixed now: the ensemble module is package-safe while preserving the single threshold and uncertainty policy.
 """
 
 from __future__ import annotations
 
 from statistics import mean
 
-from config import settings
+try:
+    from ..config import settings
+except ImportError:
+    from config import settings
 
 
 def combine_weighted_scores(scores: list[tuple[float, float]]) -> tuple[float, str, float]:

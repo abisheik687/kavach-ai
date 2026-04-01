@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: audio analysis mixed request parsing, feature visualization, temp file I/O, and heuristic scoring in the router itself.
-- Fixed now: audio inference and waveform extraction happen here and return a clean schema payload.
+- Wrong before: package-mode backend launches failed because this pipeline only imported via backend-local module paths.
+- Fixed now: audio analysis keeps the same behavior but supports both repo-root and backend-local execution.
 """
 
 from __future__ import annotations
@@ -13,11 +13,18 @@ import numpy as np
 import soundfile as sf
 from scipy import signal
 
-from config import settings
-from models.loader import ModelRegistry
-from schemas.response import AnalysisResult, AudioResult
-from utils.file_utils import AppError, clamp
-from utils.runtime import run_inference
+try:
+    from ..config import settings
+    from ..models.loader import ModelRegistry
+    from ..schemas.response import AnalysisResult, AudioResult
+    from ..utils.file_utils import AppError, clamp
+    from ..utils.runtime import run_inference
+except ImportError:
+    from config import settings
+    from models.loader import ModelRegistry
+    from schemas.response import AnalysisResult, AudioResult
+    from utils.file_utils import AppError, clamp
+    from utils.runtime import run_inference
 
 
 def _build_waveform(audio: np.ndarray, points: int = 96) -> list[float]:

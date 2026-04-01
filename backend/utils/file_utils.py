@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: temporary media handling was duplicated, MIME checks trusted client headers too much, and cleanup paths were easy to miss.
-- Fixed now: uploads are persisted once, cleaned up centrally, and invalid media returns explicit AppError codes.
+- Wrong before: utility imports were backend-cwd specific, which broke package-mode startup before request validation could run.
+- Fixed now: file utilities are import-safe in both execution modes while keeping centralized temp-file handling.
 """
 
 from __future__ import annotations
@@ -15,7 +15,10 @@ import cv2
 import numpy as np
 from fastapi import UploadFile
 
-from config import settings
+try:
+    from ..config import settings
+except ImportError:
+    from config import settings
 
 
 class AppError(Exception):

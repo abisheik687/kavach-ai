@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: image inference logic mixed true model loading with placeholder branches and did not provide a reliable fallback when weights were missing.
-- Fixed now: each image slot attempts its configured open-source model once at startup and falls back to a deterministic forensic scorer only when loading fails.
+- Wrong before: this module had cwd-sensitive imports and a latent `torch` NameError in the timm inference path.
+- Fixed now: image model loading works in both execution modes and the timm classifier path has a proper torch import during inference.
 """
 
 from __future__ import annotations
@@ -14,8 +14,12 @@ import cv2
 import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from config import settings
-from utils.file_utils import clamp
+try:
+    from ..config import settings
+    from ..utils.file_utils import clamp
+except ImportError:
+    from config import settings
+    from utils.file_utils import clamp
 
 
 def _sigmoid(value: float) -> float:
@@ -119,6 +123,7 @@ class ImageModelFactory:
         return infer, 'primary'
 
     def build_timm_classifier(self, repo_id: str, model_name: str) -> tuple[Callable[[Image.Image], float], str]:
+        import torch
         import timm
 
         model = timm.create_model(f'hf_hub:{repo_id}', pretrained=True)

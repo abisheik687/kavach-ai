@@ -1,14 +1,17 @@
 """
 Internal trace:
-- Wrong before: logging depended on partially imported third-party setup and crashed the main app on startup.
-- Fixed now: the API uses a safe standard-library logger with one predictable formatter.
+- Wrong before: the logger module only imported from one cwd layout, which could crash startup before logs were configured.
+- Fixed now: logging stays stdlib-only and now works in both repo-root and backend-local execution.
 """
 
 from __future__ import annotations
 
 import logging
 
-from config import settings
+try:
+    from ..config import settings
+except ImportError:
+    from config import settings
 
 
 _configured = False

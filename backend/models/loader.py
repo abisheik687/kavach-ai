@@ -1,4 +1,8 @@
 """
+Internal trace:
+- Wrong before: startup was blocked by cwd-sensitive imports, an incorrect model count, and strict dev boot behavior when no manifests were configured.
+- Fixed now: the loader imports cleanly in both modes, reports the correct count, and auto-enables dev fallbacks when no trained manifests exist.
+
 KAVACH-AI Model Loader
 =======================
 Loads all models at startup via FastAPI lifespan context.
@@ -26,12 +30,20 @@ from typing import Callable
 
 from fastapi import FastAPI
 
-from config import settings
-from models.artifact_loader import load_audio_artifact, load_image_artifact, load_video_artifact
-from models.audio_model import AudioModelHandle, build_audio_model, build_fallback_audio_model
-from models.image_models import ImageModelSlot, create_fallback_scorer, create_image_slots
-from models.video_model import VideoModelHandle, build_video_model
-from utils.logger import get_logger
+try:
+    from ..config import settings
+    from ..utils.logger import get_logger
+    from .artifact_loader import load_audio_artifact, load_image_artifact, load_video_artifact
+    from .audio_model import AudioModelHandle, build_audio_model, build_fallback_audio_model
+    from .image_models import ImageModelSlot, create_fallback_scorer, create_image_slots
+    from .video_model import VideoModelHandle, build_video_model
+except ImportError:
+    from config import settings
+    from models.artifact_loader import load_audio_artifact, load_image_artifact, load_video_artifact
+    from models.audio_model import AudioModelHandle, build_audio_model, build_fallback_audio_model
+    from models.image_models import ImageModelSlot, create_fallback_scorer, create_image_slots
+    from models.video_model import VideoModelHandle, build_video_model
+    from utils.logger import get_logger
 
 
 logger = get_logger(__name__)
@@ -55,16 +67,30 @@ class ModelRegistry:
 
     @property
     def loaded_count(self) -> int:
-        return len(self.image_models) + (1 if self.audio_model else 0) + 1
+        return len(self.image_models) + (1 if self.audio_model else 0)
 
 
 _registry = ModelRegistry()
+_auto_fallback_warned = False
 
 
 def _allow_fallback() -> bool:
+    global _auto_fallback_warned
     if os.getenv('TEST_MODE', '').strip().lower() == 'true':
         return True
-    return settings.allow_fallback_models
+    if settings.allow_fallback_models:
+        return True
+    manifests = (
+        settings.model_image_artifact_manifest,
+        settings.model_audio_artifact_manifest,
+        settings.model_video_artifact_manifest,
+    )
+    if settings.environment.lower() != 'production' and not any(manifests):
+        if not _auto_fallback_warned:
+            logger.warning('auto_enabling_fallback_models', extra={'reason': 'no_artifact_manifests_configured'})
+            _auto_fallback_warned = True
+        return True
+    return False
 
 
 def _can_reach_huggingface() -> bool:

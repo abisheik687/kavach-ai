@@ -1,7 +1,7 @@
 """
 Internal trace:
-- Wrong before: video analysis decoded too much media eagerly, sampled frames by walking the full clip, and let per-frame failures bubble into request crashes.
-- Fixed now: frame extraction is bounded by duration and sample count, inference failures degrade gracefully, and optional audio extraction is capped and isolated.
+- Wrong before: package-mode launches broke on absolute imports, so the video pipeline could not even be imported from repo root.
+- Fixed now: video analysis supports both execution modes and keeps the bounded decode + isolated audio extraction behavior.
 """
 
 from __future__ import annotations
@@ -16,13 +16,22 @@ import librosa
 import numpy as np
 import soundfile as sf
 
-from config import settings
-from models.ensemble import aggregate_video_scores
-from models.loader import ModelRegistry
-from pipelines.audio_pipeline import _build_waveform
-from schemas.response import AnalysisResult, AudioResult, ModelScore, VideoFramePreview
-from utils.file_utils import AppError, clamp, cleanup_path, find_ffmpeg_binary, image_to_base64
-from utils.runtime import run_inference
+try:
+    from ..config import settings
+    from ..models.ensemble import aggregate_video_scores
+    from ..models.loader import ModelRegistry
+    from ..schemas.response import AnalysisResult, AudioResult, ModelScore, VideoFramePreview
+    from ..utils.file_utils import AppError, clamp, cleanup_path, find_ffmpeg_binary, image_to_base64
+    from ..utils.runtime import run_inference
+    from .audio_pipeline import _build_waveform
+except ImportError:
+    from config import settings
+    from models.ensemble import aggregate_video_scores
+    from models.loader import ModelRegistry
+    from pipelines.audio_pipeline import _build_waveform
+    from schemas.response import AnalysisResult, AudioResult, ModelScore, VideoFramePreview
+    from utils.file_utils import AppError, clamp, cleanup_path, find_ffmpeg_binary, image_to_base64
+    from utils.runtime import run_inference
 
 
 def _compute_frame_indices(frame_count: int, fps: float) -> list[int]:
