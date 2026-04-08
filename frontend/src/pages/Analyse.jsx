@@ -1,9 +1,3 @@
-/**
- * Internal trace:
- * - Wrong before: the analyse page was functional but visually flat and did not fully use the wider web layout to guide users through the upload flow.
- * - Fixed now: the page combines a stronger responsive composition, a more premium upload workspace, and clearer sidebar guidance for the web-first product.
- */
-
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, AudioLines, Film, Image as ImageIcon, ShieldCheck, Upload, Workflow } from 'lucide-react';
@@ -14,7 +8,7 @@ import { useDropZone } from '../hooks/useDropZone.js';
 
 const surfaceCards = [
   { title: 'Images', detail: 'PNG, JPEG, WEBP', icon: ImageIcon },
-  { title: 'Videos', detail: 'MP4, WEBM up to 100 MB', icon: Film },
+  { title: 'Videos', detail: 'MP4, WEBM · up to 100 MB', icon: Film },
   { title: 'Audio', detail: 'WAV, MP3, OGG', icon: AudioLines },
 ];
 
@@ -57,51 +51,80 @@ function Analyse({ analysis }) {
 
   return (
     <div className="scan-shell px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col gap-5 rounded-[30px] border border-white/6 bg-black/10 px-5 py-5 backdrop-blur sm:px-6 lg:flex-row lg:items-start lg:justify-between">
+      <div className="mx-auto max-w-7xl space-y-7">
+
+        {/* ── Header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-5 rounded-2xl border px-5 py-5 backdrop-blur sm:px-6 lg:flex-row lg:items-start lg:justify-between"
+          style={{ borderColor: 'var(--border)', background: 'rgba(8,10,18,0.6)' }}
+        >
           <div className="space-y-3">
-            <Link to="/" className="label-font inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-cyan-100">
+            <Link
+              to="/"
+              className="label-font inline-flex items-center gap-2 text-sm transition"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#f5c842'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+            >
               <ArrowLeft size={14} />
               Back to home
             </Link>
-            <div className="space-y-3">
-              <p className="section-kicker label-font text-xs font-semibold">Web-first analysis console</p>
-              <h1 className="heading-font text-4xl uppercase tracking-[0.16em] text-white sm:text-5xl">Analyse upload</h1>
-              <p className="max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
-                The extension path is gone and the full workflow now lives here. Upload from desktop or mobile, track progress in one place,
-                and land directly in a readable forensic results view.
+            <div className="space-y-2">
+              <p className="section-kicker">Web-first analysis console</p>
+              <h1 className="heading-font text-4xl sm:text-5xl" style={{ color: 'var(--text-primary)' }}>Analyse Upload</h1>
+              <p className="max-w-2xl text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                The extension path is gone and the full workflow now lives here. Upload from desktop or mobile,
+                track progress in one place, and land directly in a readable forensic results view.
               </p>
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3 lg:w-[28rem] lg:grid-cols-1 xl:w-[30rem] xl:grid-cols-3">
+
+          <div className="grid gap-3 sm:grid-cols-3 lg:w-[26rem] lg:grid-cols-1 xl:w-[28rem] xl:grid-cols-3">
             {surfaceCards.map(({ title, detail, icon: Icon }) => (
-              <div key={title} className="signal-card rounded-[24px] p-4">
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-                  <Icon size={18} />
+              <div key={title} className="signal-card rounded-xl p-4">
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ border: '1px solid rgba(245,200,66,0.2)', background: 'rgba(245,200,66,0.08)', color: '#f5c842' }}
+                >
+                  <Icon size={17} />
                 </div>
-                <p className="heading-font text-sm uppercase tracking-[0.14em] text-white">{title}</p>
-                <p className="label-font mt-2 text-sm text-slate-400">{detail}</p>
+                <p className="heading-font text-sm" style={{ color: 'var(--text-primary)', letterSpacing: '0.05em' }}>{title}</p>
+                <p className="label-font mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{detail}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
+        {/* ── Main Grid ── */}
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_22rem]">
-          <div className="space-y-6">
+
+          {/* Upload area */}
+          <div className="space-y-5">
             <DropZone dropzone={dropzone} disabled={busy} onBrowse={onBrowse} />
             <input ref={inputRef} type="file" className="hidden" onChange={onFileChange} />
-
             <ProgressBar status={analysis.status === 'idle' ? 'idle' : analysis.status} progress={analysis.progress} />
 
             {analysis.error ? (
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="inline-error rounded-[28px] px-5 py-5 sm:px-6">
-                <p className="heading-font text-lg uppercase tracking-[0.16em] text-white">{analysis.error.title}</p>
-                <p className="label-font mt-2 text-sm leading-7 text-rose-50">{analysis.error.message}</p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="inline-error rounded-2xl px-5 py-5 sm:px-6"
+              >
+                <p className="heading-font text-lg" style={{ color: 'var(--text-primary)' }}>{analysis.error.title}</p>
+                <p className="label-font mt-2 text-sm leading-relaxed" style={{ color: '#fecaca' }}>{analysis.error.message}</p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <button type="button" onClick={onSubmit} className="action-secondary label-font rounded-full px-4 py-3 text-sm font-semibold transition">
+                  <button
+                    type="button"
+                    onClick={onSubmit}
+                    className="action-secondary label-font rounded-full px-4 py-2.5 text-sm font-semibold transition"
+                  >
                     {analysis.error.retryLabel}
                   </button>
-                  <span className="data-font text-xs uppercase tracking-[0.18em] text-rose-100/80">{analysis.error.code}</span>
+                  <span className="data-font text-xs uppercase tracking-widest" style={{ color: 'rgba(254,202,202,0.7)' }}>
+                    {analysis.error.code}
+                  </span>
                 </div>
               </motion.div>
             ) : null}
@@ -111,63 +134,72 @@ function Analyse({ analysis }) {
                 type="button"
                 disabled={busy}
                 onClick={onSubmit}
-                className="action-primary heading-font inline-flex items-center justify-center gap-2 rounded-full px-6 py-4 text-sm uppercase tracking-[0.16em] transition disabled:cursor-not-allowed disabled:opacity-45"
+                className="action-primary heading-font inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Upload size={16} />
-                {busy ? 'Analysing' : 'Analyse file'}
+                <Upload size={15} />
+                {busy ? 'Analysing…' : 'Analyse file'}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  analysis.reset();
-                  dropzone.clear();
-                }}
-                className="action-secondary label-font inline-flex items-center justify-center gap-2 rounded-full px-5 py-4 text-sm font-semibold transition"
+                onClick={() => { analysis.reset(); dropzone.clear(); }}
+                className="action-secondary label-font inline-flex items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium transition"
               >
-                <ShieldCheck size={16} />
+                <ShieldCheck size={15} />
                 Reset session
               </button>
             </div>
           </div>
 
-          <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
-            <div className="panel rounded-[28px] p-5 sm:p-6">
+          {/* Sidebar */}
+          <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+            <div className="panel rounded-2xl p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/18 bg-cyan-300/10 text-cyan-100">
-                  <Workflow size={18} />
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ border: '1px solid rgba(245,200,66,0.18)', background: 'rgba(245,200,66,0.08)', color: '#f5c842' }}
+                >
+                  <Workflow size={17} />
                 </div>
                 <div>
-                  <p className="section-kicker label-font text-[11px] font-semibold">Workflow guide</p>
-                  <p className="heading-font text-base uppercase tracking-[0.14em] text-white">Why this page works better</p>
+                  <p className="section-kicker" style={{ fontSize: '0.65rem' }}>Workflow guide</p>
+                  <p className="heading-font text-sm" style={{ color: 'var(--text-primary)', letterSpacing: '0.05em' }}>Why this page works better</p>
                 </div>
               </div>
-              <div className="space-y-3">
+
+              <div className="space-y-2.5">
                 {checkpoints.map((point, index) => (
-                  <div key={point} className="rounded-2xl border border-white/6 bg-white/3 px-4 py-3">
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="heading-font text-xs uppercase tracking-[0.18em] text-cyan-100">0{index + 1}</span>
+                  <div
+                    key={point}
+                    className="rounded-xl px-4 py-3"
+                    style={{ border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.025)' }}
+                  >
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <span
+                        className="heading-font text-[11px] uppercase tracking-widest"
+                        style={{ color: '#f5c842' }}
+                      >
+                        0{index + 1}
+                      </span>
                     </div>
-                    <p className="label-font text-sm leading-7 text-slate-300">{point}</p>
+                    <p className="label-font text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{point}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="signal-card rounded-[28px] p-5 sm:p-6">
-              <p className="section-kicker label-font text-[11px] font-semibold">Limits</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                <div className="metric-tile rounded-2xl p-4">
-                  <p className="label-font text-xs uppercase tracking-[0.16em] text-slate-400">Images</p>
-                  <p className="heading-font mt-3 text-2xl text-cyan-100">20 MB</p>
-                </div>
-                <div className="metric-tile rounded-2xl p-4">
-                  <p className="label-font text-xs uppercase tracking-[0.16em] text-slate-400">Audio</p>
-                  <p className="heading-font mt-3 text-2xl text-emerald-200">20 MB</p>
-                </div>
-                <div className="metric-tile rounded-2xl p-4">
-                  <p className="label-font text-xs uppercase tracking-[0.16em] text-slate-400">Video</p>
-                  <p className="heading-font mt-3 text-2xl text-orange-200">100 MB</p>
-                </div>
+            <div className="signal-card rounded-2xl p-5 sm:p-6">
+              <p className="section-kicker" style={{ fontSize: '0.65rem' }}>Size limits</p>
+              <div className="mt-3 grid gap-2.5 sm:grid-cols-3 xl:grid-cols-1">
+                {[
+                  { label: 'Images', value: '20 MB', color: '#f5c842' },
+                  { label: 'Audio',  value: '20 MB', color: '#34d399' },
+                  { label: 'Video',  value: '100 MB', color: 'var(--indigo)' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="metric-tile rounded-xl p-4">
+                    <p className="label-font text-xs uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{label}</p>
+                    <p className="heading-font mt-2 text-2xl" style={{ color }}>{value}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </aside>

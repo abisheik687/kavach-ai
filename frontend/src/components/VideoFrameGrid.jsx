@@ -1,9 +1,3 @@
-/**
- * Internal trace:
- * - Wrong before: the video frame grid worked, but the cards could better emphasize the frame identity and forensic score in the refreshed UI.
- * - Fixed now: frame cards use a richer overlay treatment and respond more cleanly across breakpoints.
- */
-
 import { motion } from 'framer-motion';
 
 /**
@@ -12,25 +6,47 @@ import { motion } from 'framer-motion';
 function VideoFrameGrid({ frames }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {frames.map((frame, index) => (
-        <motion.div
-          key={`${frame.index}-${index}`}
-          initial={{ opacity: 0, filter: 'blur(12px)', scale: 0.985 }}
-          animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-          transition={{ delay: index * 0.08, duration: 0.45 }}
-          className="panel overflow-hidden rounded-[28px]"
-        >
-          <div className="relative">
-            <img src={frame.image_base64} alt={`Analysed frame ${frame.index}`} className="aspect-video w-full object-cover" />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-4 py-4">
-              <div className="flex items-end justify-between gap-3">
-                <span className="media-badge label-font rounded-full px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-slate-100">Frame {frame.index}</span>
-                <span className="heading-font text-lg text-cyan-100">{(frame.fake_probability * 100).toFixed(1)}%</span>
+      {frames.map((frame, index) => {
+        const prob = frame.fake_probability;
+        const scoreColor = prob >= 0.8 ? '#f87171' : prob >= 0.55 ? '#f5c842' : '#34d399';
+
+        return (
+          <motion.div
+            key={`${frame.index}-${index}`}
+            initial={{ opacity: 0, filter: 'blur(10px)', scale: 0.97 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+            transition={{ delay: index * 0.07, duration: 0.4 }}
+            className="panel overflow-hidden rounded-2xl"
+          >
+            <div className="relative">
+              <img
+                src={frame.image_base64}
+                alt={`Analysed frame ${frame.index}`}
+                className="aspect-video w-full object-cover"
+              />
+              <div
+                className="absolute inset-x-0 bottom-0 px-4 py-3"
+                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }}
+              >
+                <div className="flex items-end justify-between gap-2">
+                  <span
+                    className="media-badge label-font rounded-full px-3 py-1 text-[11px] uppercase tracking-wider"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Frame {frame.index}
+                  </span>
+                  <span
+                    className="heading-font text-lg"
+                    style={{ color: scoreColor }}
+                  >
+                    {(prob * 100).toFixed(1)}%
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      ))}
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
