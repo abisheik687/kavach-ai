@@ -55,15 +55,20 @@ function Home() {
               <Shield size={20} />
             </div>
             <div>
-<<<<<<< HEAD
-              <p className="heading-font text-base tracking-wider" style={{ color: '#f5c842' }}>KAVACH-AI</p>
-=======
-              <p className="heading-font text-base tracking-wider" style={{ color: '#f5c842' }}>Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques</p>
->>>>>>> 7df14d1 (UI enhanced)
-              <p className="label-font text-xs" style={{ color: 'var(--text-secondary)', letterSpacing: '0.08em' }}>
-                Web forensic lab for media authenticity
-              </p>
-            </div>
+  <p
+    className="heading-font text-base tracking-wider"
+    style={{ color: '#f5c842' }}
+  >
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+  </p>
+
+  <p
+    className="label-font text-xs"
+    style={{ color: 'var(--text-secondary)', letterSpacing: '0.08em' }}
+  >
+    Web forensic lab for media authenticity
+  </p>
+</div>
           </div>
           <div className="flex flex-wrap gap-3 items-center">
             <div className="media-badge label-font inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -115,33 +120,32 @@ function Home() {
                   >
                     deepfake detection
                   </span>
-                  <span style={{ color: 'var(--indigo)', WebkitTextFillColor: 'initial' }}>web app</span>
-                </h1>
+    <span style={{ color: 'var(--indigo)', WebkitTextFillColor: 'initial' }}>
+  web app
+</span>
+</h1>
 
-                <motion.p
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.18 }}
-                  className="max-w-xl text-base leading-relaxed"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-<<<<<<< HEAD
-                  KAVACH-AI runs as a fully web-native forensic experience. Upload media from any screen,
-=======
-                  Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques runs as a fully web-native forensic experience. Upload media from any screen,
->>>>>>> 7df14d1 (UI enhanced)
-                  inspect ensemble confidence, and review frame or waveform evidence in an interface
-                  designed for operational trust.
-                </motion.p>
-              </div>
+<motion.p
+  initial={{ opacity: 0, y: 16 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.18 }}
+  className="max-w-xl text-base leading-relaxed"
+  style={{ color: 'var(--text-secondary)' }}
+>
+  Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+  runs as a fully web-native forensic experience. Upload media from any screen,
+  inspect ensemble confidence, and review frame or waveform evidence in an interface
+  designed for operational trust.
+</motion.p>
+</div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.28 }}
-                className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"
-              >
-                <Link
+<motion.div
+  initial={{ opacity: 0, y: 14 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.28 }}
+  className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+>
+<Link
                   to="/analyse"
                   className="action-primary heading-font inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm"
                 >
