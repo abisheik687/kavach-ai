@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI FastAPI Application Entry Point
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques FastAPI Application Entry Point
+>>>>>>> 7df14d1 (UI enhanced)
 Real-Time Deepfake Detection and Threat Intelligence System
 NO API KEYS REQUIRED - All processing is local
 """

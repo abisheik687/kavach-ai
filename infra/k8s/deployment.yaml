@@ -1,8 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+<<<<<<< HEAD
   name: kavach-backend
   namespace: kavach-ai
+=======
+  name: mmdds-backend
+  namespace: Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 spec:
   replicas: 3
   selector:
@@ -15,7 +20,11 @@ spec:
     spec:
       containers:
       - name: backend
+<<<<<<< HEAD
         image: abisheik687/kavach-backend:v2.0
+=======
+        image: abisheik687/mmdds-backend:v2.0
+>>>>>>> 7df14d1 (UI enhanced)
         ports:
         - containerPort: 8000
         resources:
@@ -27,9 +36,15 @@ spec:
             memory: "2Gi"
         envFrom:
         - configMapRef:
+<<<<<<< HEAD
             name: kavach-config
         - secretRef:
             name: kavach-secrets
+=======
+            name: mmdds-config
+        - secretRef:
+            name: mmdds-secrets
+>>>>>>> 7df14d1 (UI enhanced)
         startupProbe:
           httpGet:
             path: /health
@@ -40,13 +55,22 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
+<<<<<<< HEAD
   name: kavach-hpa
   namespace: kavach-ai
+=======
+  name: mmdds-hpa
+  namespace: Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
+<<<<<<< HEAD
     name: kavach-backend
+=======
+    name: mmdds-backend
+>>>>>>> 7df14d1 (UI enhanced)
   minReplicas: 2
   maxReplicas: 10
   metrics:

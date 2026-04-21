@@ -128,7 +128,11 @@ export default function HistoryPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
+<<<<<<< HEAD
         a.download = `kavach-history-${new Date().toISOString().split('T')[0]}.csv`;
+=======
+        a.download = `mmdds-history-${new Date().toISOString().split('T')[0]}.csv`;
+>>>>>>> 7df14d1 (UI enhanced)
         a.click();
         URL.revokeObjectURL(url);
     };

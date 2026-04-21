@@ -24,7 +24,11 @@ class JournalistAgent:
         models = scan_result.get("model_breakdown", {})
         
         if not self.enabled:
+<<<<<<< HEAD
             return f"Mock Briefing:\n\nThe KAVACH-AI system analyzed the media and concluded a verdict of {verdict} with a risk score of {risk}. The analysis utilized multiple models ({len(models)} modules engaged).\n\nPlease provide a GEMINI_API_KEY to enable full AI-generated journalist briefings."
+=======
+            return f"Mock Briefing:\n\nThe Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques system analyzed the media and concluded a verdict of {verdict} with a risk score of {risk}. The analysis utilized multiple models ({len(models)} modules engaged).\n\nPlease provide a GEMINI_API_KEY to enable full AI-generated journalist briefings."
+>>>>>>> 7df14d1 (UI enhanced)
 
         prompt = f"""
         Act as a cybersecurity journalist summarizing a deepfake forensic analysis report.

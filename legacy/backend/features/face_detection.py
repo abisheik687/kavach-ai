@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Face Detection and Tracking
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Face Detection and Tracking
+>>>>>>> 7df14d1 (UI enhanced)
 MediaPipe-based face detection and tracking for deepfake analysis
 NO API KEYS REQUIRED - All processing is local
 """

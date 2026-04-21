@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Enhanced Ensemble Voting System
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Enhanced Ensemble Voting System
+>>>>>>> 7df14d1 (UI enhanced)
 Implements weighted soft voting with test-time augmentation (TTA)
 Follows requirements: ViT=0.30, EfficientNet-B4=0.25, Xception=0.20, ConvNeXt=0.15, Audio CNN=0.10
 """

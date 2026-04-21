@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Alerts API
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Alerts API
+>>>>>>> 7df14d1 (UI enhanced)
 Manage threat alerts and forensic evidence
 """
 
@@ -251,7 +255,11 @@ async def export_alert_evidence(
     }
 
     payload = json.dumps(bundle, indent=2, default=str)
+<<<<<<< HEAD
     filename = f"kavach_evidence_alert_{alert_id}.json"
+=======
+    filename = f"mmdds_evidence_alert_{alert_id}.json"
+>>>>>>> 7df14d1 (UI enhanced)
 
     return Response(
         content=payload,
@@ -354,7 +362,11 @@ async def mark_false_positive(
 
 async def dispatch_webhook(alert_id: int, db: AsyncSession):
     """
+<<<<<<< HEAD
     KAVACH-AI World-Class Webhook System.
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques World-Class Webhook System.
+>>>>>>> 7df14d1 (UI enhanced)
     Dispatches alert data to configured external endpoints for real-time security.
     """
     result = await db.execute(select(Alert).filter(Alert.id == alert_id))
@@ -364,7 +376,11 @@ async def dispatch_webhook(alert_id: int, db: AsyncSession):
         return
 
     payload = {
+<<<<<<< HEAD
         "event": "kavach.alert.detected",
+=======
+        "event": "mmdds.alert.detected",
+>>>>>>> 7df14d1 (UI enhanced)
         "alert_id": alert.id,
         "severity": alert.severity,
         "attack_type": alert.attack_type,

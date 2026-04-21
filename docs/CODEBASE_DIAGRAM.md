@@ -1,8 +1,14 @@
 # Internal trace:
 # - Wrong before: this diagram documented the retired browser extension, old API layout, and legacy orchestration stack that are no longer part of the active product path.
+<<<<<<< HEAD
 # - Fixed now: the diagram reflects the current web-only KAVACH-AI structure and the archived legacy boundary.
 
 # KAVACH-AI / DeepShield Web Architecture
+=======
+# - Fixed now: the diagram reflects the current web-only Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques structure and the archived legacy boundary.
+
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques / DeepShield Web Architecture
+>>>>>>> 7df14d1 (UI enhanced)
 
 This diagram now reflects the active, web-only application structure.
 

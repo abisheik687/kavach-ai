@@ -15,13 +15,21 @@ def test_api_security():
     
     # 1. Register Admin
     print("1. Registering User...")
+<<<<<<< HEAD
     client.post("/auth/register?email=admin@kavach.ai&password=securepassword")
+=======
+    client.post("/auth/register?email=admin@multimodal-deepfake-detection.ai&password=securepassword")
+>>>>>>> 7df14d1 (UI enhanced)
 
     # 2. Login & Get Token
     print("2. Logging in...")
     response = client.post(
         "/auth/token",
+<<<<<<< HEAD
         data={"username": "admin@kavach.ai", "password": "securepassword"}
+=======
+        data={"username": "admin@multimodal-deepfake-detection.ai", "password": "securepassword"}
+>>>>>>> 7df14d1 (UI enhanced)
     )
     assert response.status_code == 200
     token = response.json()["access_token"]

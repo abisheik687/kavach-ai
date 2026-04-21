@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # 📊 KAVACH-AI - Phase 1 Implementation Summary
+=======
+# 📊 Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques - Phase 1 Implementation Summary
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## ✅ Completed: Project Foundation & Infrastructure
 
@@ -216,7 +220,11 @@ curl http://localhost:8000/health
 ```json
 {
   "status": "healthy",
+<<<<<<< HEAD
   "app": "KAVACH-AI",
+=======
+  "app": "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques",
+>>>>>>> 7df14d1 (UI enhanced)
   "version": "1.0.0",
   "environment": "development"
 }
@@ -326,8 +334,13 @@ docker-compose up --build
 ### Option 3: Standalone Docker
 
 ```bash
+<<<<<<< HEAD
 docker build -t kavach-ai .
 docker run -p 8000:8000 kavach-ai
+=======
+docker build -t Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques .
+docker run -p 8000:8000 Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 ```
 
 ---
@@ -458,7 +471,11 @@ Merkle tree with cryptographic hashing from day 1!
 
 ## 🏆 Achievement Unlocked!
 
+<<<<<<< HEAD
 **KAVACH-AI Phase 1: Foundation Complete!**
+=======
+**Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Phase 1: Foundation Complete!**
+>>>>>>> 7df14d1 (UI enhanced)
 
 ```
 ✅ Project Structure
@@ -482,4 +499,8 @@ Merkle tree with cryptographic hashing from day 1!
 **Status:** Production-ready foundation  
 **Next:** Real-time stream processing
 
+<<<<<<< HEAD
 🛡️ **KAVACH-AI - Protecting Digital Truth in Real-Time**
+=======
+🛡️ **Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques - Protecting Digital Truth in Real-Time**
+>>>>>>> 7df14d1 (UI enhanced)

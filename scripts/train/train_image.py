@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
+<<<<<<< HEAD
 KAVACH-AI Image Model Trainer
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Image Model Trainer
+>>>>>>> 7df14d1 (UI enhanced)
 Trains EfficientNet-B4 + Xception ensemble for deepfake detection
 """
 
@@ -454,7 +458,11 @@ def main():
     
     # MLflow setup
     if MLFLOW_AVAILABLE:
+<<<<<<< HEAD
         mlflow.set_experiment('kavach-ai-image-training')
+=======
+        mlflow.set_experiment('Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques-image-training')
+>>>>>>> 7df14d1 (UI enhanced)
         mlflow.start_run()
         mlflow.log_params(CONFIG)
     

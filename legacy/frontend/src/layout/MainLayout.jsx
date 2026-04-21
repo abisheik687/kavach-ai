@@ -43,7 +43,11 @@ export default function MainLayout() {
                         style={{ background: 'var(--cyan)', color: '#0A1628' }}>K</div>
                     {!collapsed && (
                         <span className='font-bold tracking-wide'
+<<<<<<< HEAD
                             style={{ color: 'var(--cyan)', fontSize: 15 }}>KAVACH-AI</span>
+=======
+                            style={{ color: 'var(--cyan)', fontSize: 15 }}>Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques</span>
+>>>>>>> 7df14d1 (UI enhanced)
                     )}
                 </div>
 

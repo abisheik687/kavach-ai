@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI WebSocket API Endpoints
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques WebSocket API Endpoints
+>>>>>>> 7df14d1 (UI enhanced)
 Real-time communication for alerts and detections
 """
 
@@ -28,7 +32,11 @@ async def websocket_endpoint(websocket: WebSocket):
         # Send initial connection confirmation
         await websocket.send_json({
             'type': 'connected',
+<<<<<<< HEAD
             'message': 'Connected to KAVACH-AI real-time updates'
+=======
+            'message': 'Connected to Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques real-time updates'
+>>>>>>> 7df14d1 (UI enhanced)
         })
         
         # Keep connection alive and listen for client messages

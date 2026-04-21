@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, User, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+<<<<<<< HEAD
 const DEMO_EMAIL = 'demo@kavach.ai';
+=======
+const DEMO_EMAIL = 'demo@multimodal-deepfake-detection.ai';
+>>>>>>> 7df14d1 (UI enhanced)
 const DEMO_PASSWORD = 'kavach2026';
 
 const LoginPage = () => {
@@ -24,7 +28,11 @@ const LoginPage = () => {
             await login(username, password);
             navigate('/dashboard');
         } catch (_) {
+<<<<<<< HEAD
             setError('Invalid credentials. Try demo@kavach.ai / kavach2026');
+=======
+            setError('Invalid credentials. Try demo@multimodal-deepfake-detection.ai / kavach2026');
+>>>>>>> 7df14d1 (UI enhanced)
         } finally {
             setLoading(false);
         }
@@ -136,7 +144,11 @@ const LoginPage = () => {
                 {/* Demo hint */}
                 <div className="mt-5 p-3 rounded-lg bg-neon-blue/5 border border-neon-blue/20">
                     <p className="text-center text-xs text-gray-500">
+<<<<<<< HEAD
                         Demo credentials: <span className="text-neon-blue font-mono">demo@kavach.ai</span> / <span className="text-neon-blue font-mono">kavach2026</span>
+=======
+                        Demo credentials: <span className="text-neon-blue font-mono">demo@multimodal-deepfake-detection.ai</span> / <span className="text-neon-blue font-mono">kavach2026</span>
+>>>>>>> 7df14d1 (UI enhanced)
                     </p>
                 </div>
 

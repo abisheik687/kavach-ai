@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI: Production Training Configuration
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques: Production Training Configuration
+>>>>>>> 7df14d1 (UI enhanced)
 # Submission-safe local training stack:
 # - image: ConvNeXt first, SwinV2 optional if compute allows
 # - video: r2plus1d_18

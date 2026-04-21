@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — Optical Flow Forensic Module
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Optical Flow Forensic Module
+>>>>>>> 7df14d1 (UI enhanced)
 Detects temporal inconsistencies and 'ghosting' artifacts in deepfake videos.
 """
 

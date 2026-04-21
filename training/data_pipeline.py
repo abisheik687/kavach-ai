@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Training Data Pipeline — Step 1: Face Extraction
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Training Data Pipeline — Step 1: Face Extraction
+>>>>>>> 7df14d1 (UI enhanced)
 ===========================================================
 Extracts aligned face crops from raw video/image datasets.
 Uses MTCNN (facenet-pytorch) to match the backend detection stack.
@@ -230,7 +234,11 @@ def process_directory(
 
 
 def main():
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description='KAVACH-AI Face Extractor')
+=======
+    parser = argparse.ArgumentParser(description='Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Face Extractor')
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument('--input_dir',  required=True, type=Path)
     parser.add_argument('--output_dir', required=True, type=Path)
     parser.add_argument('--label',      required=True, type=int, choices=[0,1])

@@ -1,7 +1,11 @@
 """
 test_api_integration.py
 ========================
+<<<<<<< HEAD
 Integration tests for the KAVACH-AI FastAPI backend.
+=======
+Integration tests for the Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques FastAPI backend.
+>>>>>>> 7df14d1 (UI enhanced)
 Uses FastAPI TestClient with mocked model registry — no trained models needed.
 
 Tests:

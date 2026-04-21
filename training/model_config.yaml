@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI Model Training Configuration
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Training Configuration
+>>>>>>> 7df14d1 (UI enhanced)
 # Override individual values:  python train.py --config model_config.yaml --lr 1e-5
 
 # ── Shared defaults ────────────────────────────────────────────────
@@ -18,7 +22,11 @@ shared:
   checkpoint_dir:    training/checkpoints
   log_dir:           training/logs
   wandb_enabled:     false       # set to true + WANDB_API_KEY env var
+<<<<<<< HEAD
   wandb_project:     kavach-ai-training
+=======
+  wandb_project:     Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques-training
+>>>>>>> 7df14d1 (UI enhanced)
 
 # ── vit_primary: fine-tune HuggingFace ViT ─────────────────────────
 vit_primary:

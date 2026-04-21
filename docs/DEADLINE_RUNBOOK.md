@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI Deadline Runbook
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Deadline Runbook
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## Goal
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
+<<<<<<< HEAD
 KAVACH-AI Dataset Downloader
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Dataset Downloader
+>>>>>>> 7df14d1 (UI enhanced)
 Automatically downloads FaceForensics++, Celeb-DF v2, WaveFake, and ASVspoof 2021
 """
 
@@ -277,7 +281,11 @@ class DatasetDownloader:
     def run(self) -> Dict[str, bool]:
         """Run the download process for all selected datasets"""
         print("\n" + "="*70)
+<<<<<<< HEAD
         print("🚀 KAVACH-AI Dataset Downloader")
+=======
+        print("🚀 Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Dataset Downloader")
+>>>>>>> 7df14d1 (UI enhanced)
         print("="*70)
         print(f"\nOutput directory: {self.output_dir.absolute()}")
         print(f"Datasets to download: {', '.join(self.datasets)}")
@@ -323,7 +331,11 @@ class DatasetDownloader:
 
 def main():
     parser = argparse.ArgumentParser(
+<<<<<<< HEAD
         description='Download datasets for KAVACH-AI training',
+=======
+        description='Download datasets for Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques training',
+>>>>>>> 7df14d1 (UI enhanced)
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Available Datasets:

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI — Unified requirements
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Unified requirements
+>>>>>>> 7df14d1 (UI enhanced)
 # Covers: backend runtime, training pipeline, and test infrastructure.
 # Single source of truth → install with: pip install -r requirements.txt
 

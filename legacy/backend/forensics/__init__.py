@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Forensic Evidence System
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Forensic Evidence System
+>>>>>>> 7df14d1 (UI enhanced)
 Cryptographic chain-of-custody and immutable evidence logging
 NO API KEYS REQUIRED - All processing is local
 """
@@ -379,7 +383,11 @@ class ForensicExporter:
                         severity = 8
                     
                     cef_line = (
+<<<<<<< HEAD
                         f"CEF:0|KAVACH-AI|Deepfake Detector|1.0|"
+=======
+                        f"CEF:0|Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques|Deepfake Detector|1.0|"
+>>>>>>> 7df14d1 (UI enhanced)
                         f"{evidence.evidence_type}|{evidence.evidence_type.title()} Detected|"
                         f"{severity}|"
                         f"src={evidence.metadata.get('stream_id', 'unknown')} "

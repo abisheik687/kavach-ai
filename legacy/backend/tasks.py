@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Celery Tasks
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Celery Tasks
+>>>>>>> 7df14d1 (UI enhanced)
 Background task processing for stream ingestion and detection
 NO API KEYS REQUIRED - All processing is local
 """
@@ -16,7 +20,11 @@ from backend.ingestion.stream_manager import StreamType
 
 # Initialize Celery
 celery_app = Celery(
+<<<<<<< HEAD
     'kavach',
+=======
+    'mmdds',
+>>>>>>> 7df14d1 (UI enhanced)
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL
 )

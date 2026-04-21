@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Detection Modules Test Suite
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Detection Modules Test Suite
+>>>>>>> 7df14d1 (UI enhanced)
 Comprehensive pytest tests for all detection modules (A-G)
 """
 

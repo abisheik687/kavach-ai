@@ -1,5 +1,9 @@
 # training/README_TRAINING.md
+<<<<<<< HEAD
 # KAVACH-AI Model Training Guide
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Training Guide
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## Prerequisites
 
@@ -116,7 +120,11 @@ export_onnx(model, cfg, Path('training/checkpoints/vit_primary/vit_primary.onnx'
 EOF
 ```
 
+<<<<<<< HEAD
 ## 7. Load Trained Weights into KAVACH-AI
+=======
+## 7. Load Trained Weights into Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 
 After training, point the backend to your local checkpoints via `.env`:
 

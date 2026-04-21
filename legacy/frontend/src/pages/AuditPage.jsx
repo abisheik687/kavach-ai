@@ -61,7 +61,11 @@ export default function AuditPage() {
                         PROJECT <span style={{ color: 'var(--cyan)' }}>READINESS AUDIT</span>
                     </h1>
                     <p className='text-sm mt-2 opacity-60 max-w-2xl'>
+<<<<<<< HEAD
                         Comprehensive 144-point neurological scan of the KAVACH-AI system architecture, security perimeter, and algorithmic accuracy.
+=======
+                        Comprehensive 144-point neurological scan of the Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques system architecture, security perimeter, and algorithmic accuracy.
+>>>>>>> 7df14d1 (UI enhanced)
                     </p>
                 </div>
                 <div className='text-right'>

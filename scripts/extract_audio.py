@@ -6,7 +6,11 @@ import subprocess
 from tqdm import tqdm
 from pathlib import Path
 
+<<<<<<< HEAD
 # KAVACH-AI Day 3: Audio Extraction
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 3: Audio Extraction
+>>>>>>> 7df14d1 (UI enhanced)
 # Extracts .wav files from video datasets for training
 
 def extract_audio(video_path, output_root):

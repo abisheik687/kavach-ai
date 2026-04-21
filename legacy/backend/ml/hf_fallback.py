@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Hugging Face Model Fallback System
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Hugging Face Model Fallback System
+>>>>>>> 7df14d1 (UI enhanced)
 Auto-downloads pre-trained ONNX weights from Hugging Face Hub if no GPU available
 Supports: hbenedek/efficientnet-deepfake, dima806/deepfake_vs_real_image_detection
 """

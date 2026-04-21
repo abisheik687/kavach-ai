@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — Master Agency Orchestrator (LangGraph)
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Master Agency Orchestrator (LangGraph)
+>>>>>>> 7df14d1 (UI enhanced)
 Coordinates the specialized agents in a unified 'Mission Control' workflow.
 """
 
@@ -72,7 +76,11 @@ def create_agency_graph():
 agency_app = create_agency_graph()
 
 async def run_agency_orchestration(media_metadata: dict, detection_results: dict):
+<<<<<<< HEAD
     """KAVACH-AI Mission Control Entry Point."""
+=======
+    """Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Mission Control Entry Point."""
+>>>>>>> 7df14d1 (UI enhanced)
     initial_state = {
         "media_data": media_metadata,
         "forensic_results": detection_results,
@@ -82,7 +90,11 @@ async def run_agency_orchestration(media_metadata: dict, detection_results: dict
         "report_path": "",
         "public_summary": "",
     }
+<<<<<<< HEAD
     logger.info("🛡️ Starting KAVACH-AI Master Agency Orchestration...")
+=======
+    logger.info("🛡️ Starting Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Master Agency Orchestration...")
+>>>>>>> 7df14d1 (UI enhanced)
     final_state = await agency_app.ainvoke(initial_state)
     logger.success("🛡️ Mission Control cycle complete.")
     return final_state

@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Pydantic Models for API Request/Response Validation
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Pydantic Models for API Request/Response Validation
+>>>>>>> 7df14d1 (UI enhanced)
 """
 
 from pydantic import BaseModel, Field, field_validator

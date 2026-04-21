@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI End-to-End Validation Script
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques End-to-End Validation Script
+>>>>>>> 7df14d1 (UI enhanced)
 ========================================
 Verifies the complete pipeline is working:
   1. Checks artifact manifests exist and are valid
@@ -198,7 +202,11 @@ def check_errors(client: httpx.Client, tracker: ResultTracker) -> None:
 
 def main() -> None:
     print('═' * 56)
+<<<<<<< HEAD
     print('KAVACH-AI End-to-End Validation')
+=======
+    print('Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques End-to-End Validation')
+>>>>>>> 7df14d1 (UI enhanced)
     print('═' * 56)
 
     tracker = ResultTracker()

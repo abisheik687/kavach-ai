@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Comprehensive Test Suite
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Comprehensive Test Suite
+>>>>>>> 7df14d1 (UI enhanced)
 Tests all backend modules for functionality and performance
 """
 
@@ -421,7 +425,11 @@ def test_edge_cases():
 def run_all_tests():
     """Run all tests and generate report"""
     print("\n" + "=" * 60)
+<<<<<<< HEAD
     print("KAVACH-AI COMPREHENSIVE TEST SUITE")
+=======
+    print("Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques COMPREHENSIVE TEST SUITE")
+>>>>>>> 7df14d1 (UI enhanced)
     print("=" * 60)
     print(f"Python Version: {sys.version}")
     print(f"Working Directory: {os.getcwd()}")

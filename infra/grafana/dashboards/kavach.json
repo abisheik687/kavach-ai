@@ -13,7 +13,11 @@
       "id": 1,
       "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calc": "lastNotNull", "fields": "", "values": false }, "textMode": "auto" },
       "pluginVersion": "10.0.0",
+<<<<<<< HEAD
       "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(kavach_detections_total)", "legendFormat": "__auto", "range": true, "refId": "A" } ],
+=======
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(mmdds_detections_total)", "legendFormat": "__auto", "range": true, "refId": "A" } ],
+>>>>>>> 7df14d1 (UI enhanced)
       "title": "Total Detections",
       "type": "stat"
     },
@@ -24,7 +28,11 @@
       "id": 2,
       "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calc": "lastNotNull", "fields": "", "values": false }, "textMode": "auto" },
       "pluginVersion": "10.0.0",
+<<<<<<< HEAD
       "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(kavach_active_scans)", "legendFormat": "__auto", "range": true, "refId": "A" } ],
+=======
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(mmdds_active_scans)", "legendFormat": "__auto", "range": true, "refId": "A" } ],
+>>>>>>> 7df14d1 (UI enhanced)
       "title": "Active Scans",
       "type": "stat"
     },
@@ -35,7 +43,11 @@
       "id": 3,
       "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calc": "lastNotNull", "fields": "", "values": false }, "textMode": "auto" },
       "pluginVersion": "10.0.0",
+<<<<<<< HEAD
       "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(kavach_cache_hits_total)", "legendFormat": "__auto", "range": true, "refId": "A" } ],
+=======
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(mmdds_cache_hits_total)", "legendFormat": "__auto", "range": true, "refId": "A" } ],
+>>>>>>> 7df14d1 (UI enhanced)
       "title": "Cache Hits",
       "type": "stat"
     },
@@ -46,7 +58,11 @@
       "id": 4,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "pluginVersion": "10.0.0",
+<<<<<<< HEAD
       "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "rate(kavach_model_latency_seconds_sum[1m]) / rate(kavach_model_latency_seconds_count[1m])", "legendFormat": "{{model_name}}", "range": true, "refId": "A" } ],
+=======
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "rate(mmdds_model_latency_seconds_sum[1m]) / rate(mmdds_model_latency_seconds_count[1m])", "legendFormat": "{{model_name}}", "range": true, "refId": "A" } ],
+>>>>>>> 7df14d1 (UI enhanced)
       "title": "Model Latency (Avg)",
       "type": "timeseries"
     },
@@ -57,7 +73,11 @@
       "id": 5,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "pluginVersion": "10.0.0",
+<<<<<<< HEAD
       "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "rate(kavach_confidence_score_bucket[5m])", "legendFormat": "{{verdict}}", "range": true, "refId": "A" } ],
+=======
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "rate(mmdds_confidence_score_bucket[5m])", "legendFormat": "{{verdict}}", "range": true, "refId": "A" } ],
+>>>>>>> 7df14d1 (UI enhanced)
       "title": "Confidence Score Distribution",
       "type": "timeseries"
     }
@@ -70,7 +90,12 @@
   "time": { "from": "now-6h", "to": "now" },
   "timepicker": {},
   "timezone": "",
+<<<<<<< HEAD
   "title": "KAVACH-AI Dashboard",
   "uid": "kavach-main",
+=======
+  "title": "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Dashboard",
+  "uid": "mmdds-main",
+>>>>>>> 7df14d1 (UI enhanced)
   "version": 1
 }

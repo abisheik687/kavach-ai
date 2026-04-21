@@ -61,7 +61,11 @@ def ingest_ffpp(raw_dir: str, processed_dir: str, limit: int = None):
     builder.split_manifest()
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description="KAVACH-AI FF++ Ingestion")
+=======
+    parser = argparse.ArgumentParser(description="Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques FF++ Ingestion")
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument("--raw", type=str, default="./data/raw", help="Path to raw videos")
     parser.add_argument("--proc", type=str, default="./data/processed", help="Path for processed faces")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of videos per category")

@@ -56,7 +56,11 @@ async def persist_upload_to_temp(file: UploadFile, validation) -> Path:
     with tempfile.NamedTemporaryFile(
         delete=False,
         suffix=validation.suffix,
+<<<<<<< HEAD
         prefix='kavach_',
+=======
+        prefix='mmdds_',
+>>>>>>> 7df14d1 (UI enhanced)
         dir=settings.temp_dir,
     ) as handle:
         while True:
@@ -82,7 +86,11 @@ def cleanup_path(path: str | Path) -> None:
             # Windows can keep short-lived handles on temp files after a response completes.
             return
         parent = target.parent
+<<<<<<< HEAD
         if parent != settings.temp_dir and parent.exists() and parent.name.startswith('kavach_'):
+=======
+        if parent != settings.temp_dir and parent.exists() and parent.name.startswith('mmdds_'):
+>>>>>>> 7df14d1 (UI enhanced)
             shutil.rmtree(parent, ignore_errors=True)
 
 

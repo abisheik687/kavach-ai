@@ -3,7 +3,11 @@ Internal trace:
 - Wrong before: artifact loading only imported in backend-local mode, so repo-root launches failed before trained manifests could even be resolved.
 - Fixed now: artifact inference keeps the same ONNX/PyTorch behavior but imports cleanly in both execution modes.
 
+<<<<<<< HEAD
 KAVACH-AI Artifact Loader
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Artifact Loader
+>>>>>>> 7df14d1 (UI enhanced)
 ==========================
 Loads trained model artifacts (model.pt / model.onnx) produced by
 training/train_all.py and returns callable inference functions.

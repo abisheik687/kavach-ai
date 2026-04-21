@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Frontend Server
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Frontend Server
+>>>>>>> 7df14d1 (UI enhanced)
 Serves the built React frontend
 """
 
@@ -14,7 +18,11 @@ PROJECT_ROOT = Path(__file__).parent
 FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
 
 # Create FastAPI app for static serving
+<<<<<<< HEAD
 app = FastAPI(title="KAVACH-AI Frontend")
+=======
+app = FastAPI(title="Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Frontend")
+>>>>>>> 7df14d1 (UI enhanced)
 
 # Mount static files
 if FRONTEND_DIST.exists():
@@ -46,7 +54,11 @@ else:
     async def frontend_not_found():
         return HTMLResponse(
             content="""
+<<<<<<< HEAD
             <h1>KAVACH-AI Backend Running</h1>
+=======
+            <h1>Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Backend Running</h1>
+>>>>>>> 7df14d1 (UI enhanced)
             <p>Backend API: <a href="http://localhost:8000">http://localhost:8000</a></p>
             <p>API Documentation: <a href="http://localhost:8000/docs">http://localhost:8000/docs</a></p>
             <p><em>Frontend not built. Navigate to frontend directory and run: npm run build</em></p>

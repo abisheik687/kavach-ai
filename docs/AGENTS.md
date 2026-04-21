@@ -1,7 +1,11 @@
 # 🕵️ Autonomous AI Agency — Technical Specification
 
 ## 1. Tactical Overview
+<<<<<<< HEAD
 The **KAVACH-AI Agency** is an autonomous intelligence layer designed to abstract complex forensic data into actionable threat intelligence. Built using **LangGraph**, it enables a stateful, iterative reasoning process where specialized agents collaborate to "solve" a detection event.
+=======
+The **Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Agency** is an autonomous intelligence layer designed to abstract complex forensic data into actionable threat intelligence. Built using **LangGraph**, it enables a stateful, iterative reasoning process where specialized agents collaborate to "solve" a detection event.
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## 2. Agent Archetypes & Specialized Logic
 
@@ -32,7 +36,11 @@ The **KAVACH-AI Agency** is an autonomous intelligence layer designed to abstrac
 ---
 
 ## 3. The LangGraph Orchestration
+<<<<<<< HEAD
 KAVACH-AI uses a **Top-Down Directed Acyclic Graph (DAG)** to manage agent states.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques uses a **Top-Down Directed Acyclic Graph (DAG)** to manage agent states.
+>>>>>>> 7df14d1 (UI enhanced)
 
 ```mermaid
 graph TD

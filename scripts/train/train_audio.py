@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
+<<<<<<< HEAD
 KAVACH-AI Audio Model Trainer
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Audio Model Trainer
+>>>>>>> 7df14d1 (UI enhanced)
 Trains RawNet2 + LCNN for audio deepfake detection
 """
 
@@ -456,7 +460,11 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=CONFIG['batch_size'], shuffle=False, num_workers=CONFIG['num_workers'])
     
     if MLFLOW_AVAILABLE:
+<<<<<<< HEAD
         mlflow.set_experiment('kavach-ai-audio-training')
+=======
+        mlflow.set_experiment('Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques-audio-training')
+>>>>>>> 7df14d1 (UI enhanced)
         mlflow.start_run()
         mlflow.log_params(CONFIG)
     

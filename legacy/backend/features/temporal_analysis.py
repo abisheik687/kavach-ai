@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Temporal Analysis
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Temporal Analysis
+>>>>>>> 7df14d1 (UI enhanced)
 Temporal consistency detection for deepfakes using physiological signals
 NO API KEYS REQUIRED - All processing is local
 """

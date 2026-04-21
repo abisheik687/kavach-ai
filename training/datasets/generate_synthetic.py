@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — Synthetic Dataset Generator
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Synthetic Dataset Generator
+>>>>>>> 7df14d1 (UI enhanced)
 ========================================
 Generates a fully-labelled synthetic dataset with the exact directory structure
 expected by training/multimodal_config.yaml.
@@ -219,7 +223,11 @@ def generate_all(data_root: Path | None = None, force: bool = False) -> dict[str
         data_root = ROOT / 'data'
 
     print('=' * 60)
+<<<<<<< HEAD
     print('KAVACH-AI Synthetic Dataset Generator')
+=======
+    print('Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Synthetic Dataset Generator')
+>>>>>>> 7df14d1 (UI enhanced)
     print('=' * 60)
 
     totals: dict[str, int] = {}
@@ -276,7 +284,11 @@ def generate_all(data_root: Path | None = None, force: bool = False) -> dict[str
 if __name__ == '__main__':
     import argparse
 
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description='Generate synthetic KAVACH-AI datasets')
+=======
+    parser = argparse.ArgumentParser(description='Generate synthetic Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques datasets')
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument('--data-root', type=Path, default=None, help='Override data root directory')
     parser.add_argument('--force', action='store_true', help='Regenerate existing files')
     args = parser.parse_args()

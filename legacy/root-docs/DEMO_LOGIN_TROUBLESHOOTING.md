@@ -2,7 +2,11 @@
 
 ## Demo Credentials
 
+<<<<<<< HEAD
 **Email**: `demo@kavach.ai`  
+=======
+**Email**: `demo@multimodal-deepfake-detection.ai`  
+>>>>>>> 7df14d1 (UI enhanced)
 **Password**: `kavach2026`
 
 ---
@@ -64,7 +68,11 @@ docker compose up backend
 python scripts/init_db.py
 
 # Or recreate database
+<<<<<<< HEAD
 rm kavach.db
+=======
+rm mmdds.db
+>>>>>>> 7df14d1 (UI enhanced)
 python scripts/init_db.py
 ```
 
@@ -104,7 +112,11 @@ const api = axios.create({
 # Test login endpoint directly
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
+<<<<<<< HEAD
   -d '{"username":"demo@kavach.ai","password":"kavach2026"}'
+=======
+  -d '{"username":"demo@multimodal-deepfake-detection.ai","password":"kavach2026"}'
+>>>>>>> 7df14d1 (UI enhanced)
 
 # Expected response:
 # {"access_token":"...", "token_type":"bearer", "user":{...}}
@@ -117,7 +129,11 @@ fetch('http://localhost:8000/auth/login', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
+<<<<<<< HEAD
         username: 'demo@kavach.ai',
+=======
+        username: 'demo@multimodal-deepfake-detection.ai',
+>>>>>>> 7df14d1 (UI enhanced)
         password: 'kavach2026'
     })
 })
@@ -129,10 +145,17 @@ fetch('http://localhost:8000/auth/login', {
 ### Test 3: Check Demo User in Database
 ```bash
 # SQLite
+<<<<<<< HEAD
 sqlite3 kavach.db "SELECT email, full_name, role FROM users WHERE email='demo@kavach.ai';"
 
 # Expected output:
 # demo@kavach.ai|Demo Officer|demo
+=======
+sqlite3 mmdds.db "SELECT email, full_name, role FROM users WHERE email='demo@multimodal-deepfake-detection.ai';"
+
+# Expected output:
+# demo@multimodal-deepfake-detection.ai|Demo Officer|demo
+>>>>>>> 7df14d1 (UI enhanced)
 ```
 
 ---
@@ -151,7 +174,11 @@ import asyncio
 async def reset_demo():
     async for db in get_db():
         # Delete existing
+<<<<<<< HEAD
         result = await db.execute(select(User).filter(User.email=='demo@kavach.ai'))
+=======
+        result = await db.execute(select(User).filter(User.email=='demo@multimodal-deepfake-detection.ai'))
+>>>>>>> 7df14d1 (UI enhanced)
         user = result.scalars().first()
         if user:
             await db.delete(user)
@@ -159,7 +186,11 @@ async def reset_demo():
         
         # Create new
         demo = User(
+<<<<<<< HEAD
             email='demo@kavach.ai',
+=======
+            email='demo@multimodal-deepfake-detection.ai',
+>>>>>>> 7df14d1 (UI enhanced)
             hashed_password=pwd_context.hash('kavach2026'),
             full_name='Demo Officer',
             role='demo'

@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Database Models and Setup
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Database Models and Setup
+>>>>>>> 7df14d1 (UI enhanced)
 SQLAlchemy ORM for SQLite/PostgreSQL
 """
 
@@ -266,7 +270,11 @@ async def init_db():
 async def seed_demo_user():
     """
     Seed a demo user on first run if no users exist.
+<<<<<<< HEAD
     Credentials: demo@kavach.ai / kavach2026
+=======
+    Credentials: demo@multimodal-deepfake-detection.ai / kavach2026
+>>>>>>> 7df14d1 (UI enhanced)
     """
     from passlib.context import CryptContext
     from sqlalchemy import select
@@ -274,11 +282,19 @@ async def seed_demo_user():
 
     async with SessionLocal() as db:
         try:
+<<<<<<< HEAD
             result = await db.execute(select(User).filter(User.email == "demo@kavach.ai"))
             existing = result.scalars().first()
             if not existing:
                 demo_user = User(
                     email="demo@kavach.ai",
+=======
+            result = await db.execute(select(User).filter(User.email == "demo@multimodal-deepfake-detection.ai"))
+            existing = result.scalars().first()
+            if not existing:
+                demo_user = User(
+                    email="demo@multimodal-deepfake-detection.ai",
+>>>>>>> 7df14d1 (UI enhanced)
                     hashed_password=pwd_context.hash("kavach2026"),
                     full_name="Demo Officer",
                     role="admin",
@@ -287,7 +303,11 @@ async def seed_demo_user():
                 db.add(demo_user)
                 await db.commit()
                 from loguru import logger
+<<<<<<< HEAD
                 logger.success("✓ Demo user seeded: demo@kavach.ai / kavach2026")
+=======
+                logger.success("✓ Demo user seeded: demo@multimodal-deepfake-detection.ai / kavach2026")
+>>>>>>> 7df14d1 (UI enhanced)
         except Exception as e:
             await db.rollback()
             from loguru import logger

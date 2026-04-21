@@ -11,7 +11,11 @@ import argparse
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
+<<<<<<< HEAD
 # KAVACH-AI Day 2: Simple Classifier Training
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 2: Simple Classifier Training
+>>>>>>> 7df14d1 (UI enhanced)
 # Binary Classification: Real vs Fake
 
 class DeepfakeDataset(Dataset):

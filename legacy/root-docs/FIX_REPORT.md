@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 # KAVACH-AI Backend System - Fix Report
 
 ## Executive Summary
 
 The KAVACH-AI deepfake detection backend system has been **successfully fixed and validated**. All modules are now operational with comprehensive error handling and test coverage.
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Backend System - Fix Report
+
+## Executive Summary
+
+The Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques deepfake detection backend system has been **successfully fixed and validated**. All modules are now operational with comprehensive error handling and test coverage.
+>>>>>>> 7df14d1 (UI enhanced)
 
 **Test Results: 10/10 PASSED** ✅
 
@@ -237,7 +245,11 @@ Edit `.env` file:
 ```env
 SECRET_KEY=your-secret-key-here
 ENVIRONMENT=development
+<<<<<<< HEAD
 DATABASE_URL=sqlite+aiosqlite:///./data/kavach.db
+=======
+DATABASE_URL=sqlite+aiosqlite:///./data/mmdds.db
+>>>>>>> 7df14d1 (UI enhanced)
 LOG_LEVEL=INFO
 HOST=0.0.0.0
 PORT=8000
@@ -322,7 +334,11 @@ Then add to `.env` file.
 ## Maintenance & Monitoring
 
 ### Logs Location:
+<<<<<<< HEAD
 - Application logs: `logs/kavach.log`
+=======
+- Application logs: `logs/mmdds.log`
+>>>>>>> 7df14d1 (UI enhanced)
 - Prometheus metrics: `/metrics`
 
 ### Key Metrics to Monitor:
@@ -341,7 +357,11 @@ Then add to `.env` file.
 
 ## Conclusion
 
+<<<<<<< HEAD
 **KAVACH-AI Backend System is fully operational and ready for deployment.**
+=======
+**Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Backend System is fully operational and ready for deployment.**
+>>>>>>> 7df14d1 (UI enhanced)
 
 All critical components have been validated:
 - ✅ Zero import errors

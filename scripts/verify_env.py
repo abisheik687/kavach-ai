@@ -26,7 +26,11 @@ def check_command(cmd):
         return False
 
 def main():
+<<<<<<< HEAD
     print("Verifying KAVACH-AI Environment...")
+=======
+    print("Verifying Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Environment...")
+>>>>>>> 7df14d1 (UI enhanced)
     
     # Check Python modules
     deps = ["torch", "cv2", "mediapipe", "fastapi", "yt_dlp"]

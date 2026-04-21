@@ -8,7 +8,11 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 
+<<<<<<< HEAD
 # KAVACH-AI Day 2: Face Extraction
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 2: Face Extraction
+>>>>>>> 7df14d1 (UI enhanced)
 # Extracts face crops from video datasets for training
 
 def get_face_detector():

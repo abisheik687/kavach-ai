@@ -7,10 +7,17 @@ from passlib.context import CryptContext
 async def verify_user():
     pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
     async with SessionLocal() as db:
+<<<<<<< HEAD
         result = await db.execute(select(User).filter(User.email == "demo@kavach.ai"))
         user = result.scalars().first()
         if not user:
             print("User demo@kavach.ai NOT found!")
+=======
+        result = await db.execute(select(User).filter(User.email == "demo@multimodal-deepfake-detection.ai"))
+        user = result.scalars().first()
+        if not user:
+            print("User demo@multimodal-deepfake-detection.ai NOT found!")
+>>>>>>> 7df14d1 (UI enhanced)
             return
         
         print(f"User found: {user.email}")

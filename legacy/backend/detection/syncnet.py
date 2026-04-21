@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — SyncNet Lip-Audio Synchronization
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — SyncNet Lip-Audio Synchronization
+>>>>>>> 7df14d1 (UI enhanced)
 Detects deepfakes by measuring the correlation between lip movements and audio features.
 """
 

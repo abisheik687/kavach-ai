@@ -4,7 +4,11 @@ import torch.nn as nn
 
 class TemporalDeepfakeDetector(nn.Module):
     """
+<<<<<<< HEAD
     KAVACH-AI Day 5: Temporal Deepfake Detector
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 5: Temporal Deepfake Detector
+>>>>>>> 7df14d1 (UI enhanced)
     Uses an LSTM/GRU to analyze sequences of frame features.
     Input: Sequence of feature vectors (e.g., from EfficientNet/ResNet).
     Shape: (Batch, Sequence_Length, Feature_Dim)

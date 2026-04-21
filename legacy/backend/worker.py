@@ -8,14 +8,22 @@ from backend.crud import update_scan_result
 
 load_dotenv()
 
+<<<<<<< HEAD
 # KAVACH-AI Day 8: Async Worker (Updated Day 11)
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 8: Async Worker (Updated Day 11)
+>>>>>>> 7df14d1 (UI enhanced)
 # Handles heavy AI inference & DB Persistence
 
 BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 
 celery_app = Celery(
+<<<<<<< HEAD
     "kavach_worker",
+=======
+    "mmdds_worker",
+>>>>>>> 7df14d1 (UI enhanced)
     broker=BROKER_URL,
     backend=RESULT_BACKEND
 )

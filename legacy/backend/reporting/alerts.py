@@ -4,12 +4,20 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+<<<<<<< HEAD
 # KAVACH-AI Day 12: Email Alerts
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 12: Email Alerts
+>>>>>>> 7df14d1 (UI enhanced)
 # Notifies admins of high-priority detection events
 
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+<<<<<<< HEAD
 SMTP_USER = os.getenv("SMTP_USER", "alert@kavach.ai")
+=======
+SMTP_USER = os.getenv("SMTP_USER", "alert@multimodal-deepfake-detection.ai")
+>>>>>>> 7df14d1 (UI enhanced)
 SMTP_PASS = os.getenv("SMTP_PASS", "mock_password")
 
 class EmailAlerter:
@@ -26,7 +34,11 @@ class EmailAlerter:
             msg = MIMEMultipart()
             msg['From'] = SMTP_USER
             msg['To'] = recipient
+<<<<<<< HEAD
             msg['Subject'] = f"[KAVACH-AI] {subject}"
+=======
+            msg['Subject'] = f"[Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques] {subject}"
+>>>>>>> 7df14d1 (UI enhanced)
             
             msg.attach(MIMEText(body, 'plain'))
             

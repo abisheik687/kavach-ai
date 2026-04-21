@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Live Interview Proctoring Mode Router
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Live Interview Proctoring Mode Router
+>>>>>>> 7df14d1 (UI enhanced)
 Module G: Live Interview Proctoring Mode
 
 Combines Module E (video) + Module F (audio) simultaneously

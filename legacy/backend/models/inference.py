@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Model Inference
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Inference
+>>>>>>> 7df14d1 (UI enhanced)
 ONNX Runtime-based model serving for deepfake detection
 NO API KEYS REQUIRED - All models run locally
 """
