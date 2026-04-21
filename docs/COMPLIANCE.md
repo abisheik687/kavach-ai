@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI v2.0 — Compliance & Governance Framework
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques v2.0 — Compliance & Governance Framework
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## 1. Regulatory Alignment
 
@@ -7,7 +11,11 @@
 - **Section 66D/66E**: The system is designed to detect "cheating by personation" and privacy violations while strictly handling media only for forensic validation.
 
 ### GDPR (EU)
+<<<<<<< HEAD
 - **Data Minimization**: KAVACH-AI processes media locally or via ephemeral ingestion. Original media is hashed and can be purged via the provided Data Retention policy.
+=======
+- **Data Minimization**: Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques processes media locally or via ephemeral ingestion. Original media is hashed and can be purged via the provided Data Retention policy.
+>>>>>>> 7df14d1 (UI enhanced)
 - **Right to Explanation**: Integrated GradCAM heatmaps and Agency Agent summaries provide users with a "Reasoned Verdict," satisfying the transparent AI requirement.
 
 ## 2. Data Governance
@@ -19,4 +27,8 @@
 | User Metadata | 30 Days | On-Request | TLS 1.3 |
 
 ## 3. Ethics & Bias
+<<<<<<< HEAD
 KAVACH-AI utilizes a stratified FaceForensics++ training pipeline to ensure detection parity across diverse Indian demographics and skin tones, mitigating AI-induced forensic bias.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques utilizes a stratified FaceForensics++ training pipeline to ensure detection parity across diverse Indian demographics and skin tones, mitigating AI-induced forensic bias.
+>>>>>>> 7df14d1 (UI enhanced)

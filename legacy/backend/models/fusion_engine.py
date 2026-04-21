@@ -12,7 +12,11 @@ class ForensicReport:
 
 class FusionEngine:
     """
+<<<<<<< HEAD
     KAVACH-AI Day 6: Multimodal Fusion Engine
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 6: Multimodal Fusion Engine
+>>>>>>> 7df14d1 (UI enhanced)
     Combines scores from Video, Audio, and Temporal models.
     """
     def __init__(self, weights: Dict[str, float] = None):

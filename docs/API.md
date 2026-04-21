@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI REST API Reference
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques REST API Reference
+>>>>>>> 7df14d1 (UI enhanced)
 
 **Base URL**: `http://localhost:8000`  
 **Version**: 2.0.0  
@@ -15,7 +19,11 @@ Returns basic application info.
 **Response**
 ```json
 {
+<<<<<<< HEAD
   "name": "KAVACH-AI",
+=======
+  "name": "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques",
+>>>>>>> 7df14d1 (UI enhanced)
   "version": "2.0.0",
   "docs": "/docs"
 }

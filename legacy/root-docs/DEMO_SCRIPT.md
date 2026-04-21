@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 # KAVACH-AI: Final Demo Script
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques: Final Demo Script
+>>>>>>> 7df14d1 (UI enhanced)
 
 **Objective**: Demonstrate the full end-to-end capability of the system in 5 minutes or less.
 
@@ -29,5 +33,9 @@
 *   **Talk Track**: "Every action is logged. Analysts can retrieve past cases and export official forensic reports for court procedures."
 
 ## 5. Closing (1m)
+<<<<<<< HEAD
 *   **Talk Track**: "KAVACH-AI is not just a model; it's a complete, deployable platform. It runs fully containerized on Docker, ready for on-premise deployment."
+=======
+*   **Talk Track**: "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques is not just a model; it's a complete, deployable platform. It runs fully containerized on Docker, ready for on-premise deployment."
+>>>>>>> 7df14d1 (UI enhanced)
 *   **Q&A Prep**: Be ready to explain the "Fusion Engine" weights (Video 50%, Audio 30%, Temporal 20%).

@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Capture Engine
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Capture Engine
+>>>>>>> 7df14d1 (UI enhanced)
 Real-time stream capture coordination with ring buffer
 NO API KEYS REQUIRED - All processing is local
 """

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
+<<<<<<< HEAD
 KAVACH-AI Model Benchmarking
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Benchmarking
+>>>>>>> 7df14d1 (UI enhanced)
 Evaluates trained models on test set with comprehensive metrics
 """
 

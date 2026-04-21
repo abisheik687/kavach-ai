@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Threat Intelligence
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Threat Intelligence
+>>>>>>> 7df14d1 (UI enhanced)
 Advanced threat detection, classification, and prioritization
 NO API KEYS REQUIRED - All processing is local
 """

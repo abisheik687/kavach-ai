@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Training Data Pipeline — Step 2: Manifest Builder
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Training Data Pipeline — Step 2: Manifest Builder
+>>>>>>> 7df14d1 (UI enhanced)
 ============================================================
 Scans data/processed/real/ and data/processed/fake/,
 builds a stratified train/val/test split CSV manifest.
@@ -134,7 +138,11 @@ def print_statistics(records: list[dict]) -> None:
 
 
 def main():
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description='KAVACH-AI Manifest Builder')
+=======
+    parser = argparse.ArgumentParser(description='Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Manifest Builder')
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument('--real_dir',  required=True,  type=Path)
     parser.add_argument('--fake_dir',  required=True,  type=Path)
     parser.add_argument('--output',    default='training/dataset_manifest.csv', type=Path)

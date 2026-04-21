@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Social Media Deepfake Detection Router
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Social Media Deepfake Detection Router
+>>>>>>> 7df14d1 (UI enhanced)
 Module D: Real-Time Social Media Deepfake Analysis
 
 Supports: Twitter/X, YouTube, Instagram, TikTok, Facebook

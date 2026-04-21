@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # training/train.sh
+<<<<<<< HEAD
 # KAVACH-AI one-command training launcher
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques one-command training launcher
+>>>>>>> 7df14d1 (UI enhanced)
 # Usage:
 #   ./training/train.sh --model vit_primary
 #   ./training/train.sh --model all
@@ -47,7 +51,11 @@ done
 
 # ── GPU info ──────────────────────────────────────────────────────
 echo ""
+<<<<<<< HEAD
 echo "=== KAVACH-AI Training Launcher ==="
+=======
+echo "=== Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Training Launcher ==="
+>>>>>>> 7df14d1 (UI enhanced)
 echo "Model:   $MODEL"
 python -c "import torch; print(f'PyTorch: {torch.__version__}  CUDA: {torch.cuda.is_available()}  Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"CPU\"}')"
 echo ""

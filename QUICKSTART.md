@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI Quick Start
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Quick Start
+>>>>>>> 7df14d1 (UI enhanced)
 
 This project is now centered around one active product path:
 

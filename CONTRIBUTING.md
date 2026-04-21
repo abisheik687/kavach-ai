@@ -1,4 +1,5 @@
 
+<<<<<<< HEAD
 # Contributing to KAVACH-AI
 
 First off, thanks for taking the time to contribute! 🎉
@@ -8,12 +9,27 @@ The following is a set of guidelines for contributing to KAVACH-AI and its packa
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the [KAVACH-AI Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+=======
+# Contributing to Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+
+First off, thanks for taking the time to contribute! 🎉
+
+The following is a set of guidelines for contributing to Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques and its packages. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+
+## Code of Conduct
+
+This project and everyone participating in it is governed by the [Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
+<<<<<<< HEAD
 This section guides you through submitting a bug report for KAVACH-AI. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+=======
+This section guides you through submitting a bug report for Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+>>>>>>> 7df14d1 (UI enhanced)
 
 *   **Use a clear and descriptive title** for the issue to identify the problem.
 *   **Describe the exact steps to reproduce the problem** in as much detail as possible.
@@ -21,11 +37,19 @@ This section guides you through submitting a bug report for KAVACH-AI. Following
 
 ### Suggesting Enhancements
 
+<<<<<<< HEAD
 This section guides you through submitting an enhancement suggestion for KAVACH-AI, including completely new features and minor improvements to existing functionality.
 
 *   **Use a clear and descriptive title** for the issue to identify the suggestion.
 *   **Provide a step-by-step description of the suggested enhancement** in as much detail as possible.
 *   **Explain why this enhancement would be useful** to most KAVACH-AI users.
+=======
+This section guides you through submitting an enhancement suggestion for Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques, including completely new features and minor improvements to existing functionality.
+
+*   **Use a clear and descriptive title** for the issue to identify the suggestion.
+*   **Provide a step-by-step description of the suggested enhancement** in as much detail as possible.
+*   **Explain why this enhancement would be useful** to most Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques users.
+>>>>>>> 7df14d1 (UI enhanced)
 
 ### Pull Requests
 

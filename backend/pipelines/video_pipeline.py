@@ -261,7 +261,11 @@ async def analyse_video_file(file_path: Path, registry: ModelRegistry, validatio
             warnings.append('Video temporal model failed; using frame-level evidence only')
 
     audio_result = None
+<<<<<<< HEAD
     temp_audio_dir = Path(tempfile.mkdtemp(prefix='kavach_video_audio_', dir=file_path.parent))
+=======
+    temp_audio_dir = Path(tempfile.mkdtemp(prefix='mmdds_video_audio_', dir=file_path.parent))
+>>>>>>> 7df14d1 (UI enhanced)
     background_tasks.add_task(cleanup_path, temp_audio_dir)
 
     try:

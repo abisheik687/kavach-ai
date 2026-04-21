@@ -53,7 +53,11 @@ export default function AlertsPage() {
                 const blob = await agencyAPI.getForensicReport(id);
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
+<<<<<<< HEAD
                 a.href = url; a.download = `kavach_forensic_${id}.pdf`; a.click();
+=======
+                a.href = url; a.download = `mmdds_forensic_${id}.pdf`; a.click();
+>>>>>>> 7df14d1 (UI enhanced)
                 URL.revokeObjectURL(url);
             } catch (_) {}
         }

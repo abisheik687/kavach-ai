@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — Detections & Statistics API
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Detections & Statistics API
+>>>>>>> 7df14d1 (UI enhanced)
 Provides scan history and aggregate statistics for the dashboard.
 Routes consumed by the frontend Dashboard and Reports pages.
 """

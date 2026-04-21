@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI File Upload Validation
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques File Upload Validation
+>>>>>>> 7df14d1 (UI enhanced)
 Validates file type, size, and performs basic security checks
 """
 

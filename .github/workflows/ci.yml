@@ -3,7 +3,11 @@
 # - Wrong before: CI still executed archived legacy tests, skipped all validation for the active frontend, and referenced a non-existent Docker buildx action.
 # - Fixed now: the workflow tests only the rebuilt upload-first app, builds the current Vite frontend, and uses the correct Docker setup action for image builds.
 #
+<<<<<<< HEAD
 name: KAVACH-AI CI/CD
+=======
+name: Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques CI/CD
+>>>>>>> 7df14d1 (UI enhanced)
 
 on:
   push:

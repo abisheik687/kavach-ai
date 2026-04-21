@@ -39,7 +39,11 @@ def test_reporting():
     # 2. Trigger Alert (Mock)
     print("\n2. Sending Alert...")
     alerter.send_alert(
+<<<<<<< HEAD
         recipient="admin@kavach.ai",
+=======
+        recipient="admin@multimodal-deepfake-detection.ai",
+>>>>>>> 7df14d1 (UI enhanced)
         subject=f"Deepfake Detected: {task_id}",
         body=f"High confidence deepfake detected in {scan_data['filename']}. Report attached.",
         attachment_path=pdf_path

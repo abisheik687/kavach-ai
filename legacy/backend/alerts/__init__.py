@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Real-Time Alert System
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Real-Time Alert System
+>>>>>>> 7df14d1 (UI enhanced)
 WebSocket server and notification delivery
 NO API KEYS REQUIRED - All processing is local (except optional email/SMS)
 """
@@ -229,7 +233,11 @@ class NotificationDelivery:
         }
         
         cef_message = (
+<<<<<<< HEAD
             f"CEF:0|KAVACH-AI|Deepfake Detector|1.0|"
+=======
+            f"CEF:0|Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques|Deepfake Detector|1.0|"
+>>>>>>> 7df14d1 (UI enhanced)
             f"alert_{alert.alert_id}|{alert.attack_type}|"
             f"{severity_map.get(alert.severity, 5)}|"
             f"src={alert.stream_id} "

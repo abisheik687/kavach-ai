@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Multimodal Fusion
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Multimodal Fusion
+>>>>>>> 7df14d1 (UI enhanced)
 Combines video and audio detection for robust deepfake detection
 NO API KEYS REQUIRED - All processing is local
 """

@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Project Setup Script
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Project Setup Script
+>>>>>>> 7df14d1 (UI enhanced)
 Automates initial project setup with NO manual API configuration required
 """
 
@@ -37,7 +41,11 @@ def run_command(cmd, description):
 
 
 def main():
+<<<<<<< HEAD
     print_header("KAVACH-AI Setup - Real-Time Deepfake Detection")
+=======
+    print_header("Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Setup - Real-Time Deepfake Detection")
+>>>>>>> 7df14d1 (UI enhanced)
     
     project_root = Path(__file__).parent.parent
     os.chdir(project_root)
@@ -139,7 +147,11 @@ def main():
     
     # Step 8: Summary
     print_header("Setup Complete!")
+<<<<<<< HEAD
     print("✅ KAVACH-AI is ready to run!")
+=======
+    print("✅ Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques is ready to run!")
+>>>>>>> 7df14d1 (UI enhanced)
     print("\n📋 Next Steps:")
     print("\n1. Activate virtual environment:")
     if os.name == 'nt':

@@ -2,7 +2,11 @@
 import multiprocessing
 import os
 
+<<<<<<< HEAD
 # Gunicorn Configuration for KAVACH-AI
+=======
+# Gunicorn Configuration for Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 
 # Bind to all interfaces
 bind = "0.0.0.0:8000"
@@ -23,4 +27,8 @@ errorlog = "-"
 loglevel = "info"
 
 # Process Naming
+<<<<<<< HEAD
 proc_name = "kavach_api"
+=======
+proc_name = "mmdds_api"
+>>>>>>> 7df14d1 (UI enhanced)

@@ -4,7 +4,11 @@ import requests
 from tqdm import tqdm
 import argparse
 
+<<<<<<< HEAD
 # KAVACH-AI Data Acquisition Script
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Data Acquisition Script
+>>>>>>> 7df14d1 (UI enhanced)
 # Downloads subsets of FaceForensics++ or similar datasets for training
 # Usage: python download_data.py --dataset faceforensics --count 500
 
@@ -40,7 +44,11 @@ def setup_faceforensics_structure():
     print(f"Created data directories in {DATA_DIR}")
 
 def main():
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description="KAVACH-AI Data Downloader")
+=======
+    parser = argparse.ArgumentParser(description="Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Data Downloader")
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument("--dataset", type=str, default="faceforensics", help="Dataset to download")
     args = parser.parse_args()
 

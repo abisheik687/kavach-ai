@@ -61,7 +61,11 @@ def dataset_status() -> dict[str, dict]:
 
 def print_status() -> None:
     summary = dataset_status()
+<<<<<<< HEAD
     print('\nKAVACH-AI dataset acquisition status\n')
+=======
+    print('\nMultimodal Deepfake Detection System Using Advanced Machine Learning Techniques dataset acquisition status\n')
+>>>>>>> 7df14d1 (UI enhanced)
     for modality, groups in summary.items():
         print(f'[{modality}]')
         for dataset_name, info in groups.items():

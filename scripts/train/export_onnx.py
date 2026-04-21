@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
+<<<<<<< HEAD
 KAVACH-AI ONNX Exporter
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques ONNX Exporter
+>>>>>>> 7df14d1 (UI enhanced)
 Exports trained PyTorch models to ONNX format with verification
 """
 
@@ -189,7 +193,11 @@ class ONNXExporter:
     def export_all(self):
         """Export all trained models"""
         print(f"\n{'='*70}")
+<<<<<<< HEAD
         print("KAVACH-AI ONNX Model Exporter")
+=======
+        print("Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques ONNX Model Exporter")
+>>>>>>> 7df14d1 (UI enhanced)
         print(f"{'='*70}")
         print(f"\nCheckpoint directory: {self.checkpoint_dir.absolute()}")
         print(f"Output directory: {self.output_dir.absolute()}")

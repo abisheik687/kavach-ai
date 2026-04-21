@@ -9,7 +9,11 @@ from collections import deque
 
 class StreamLoader:
     """
+<<<<<<< HEAD
     KAVACH-AI Day 4: Stream Ingestion
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 4: Stream Ingestion
+>>>>>>> 7df14d1 (UI enhanced)
     Handles connecting to YouTube Live or RTSP streams and buffering frames.
     """
     def __init__(self, source_url, buffer_size=128, sample_rate=1):

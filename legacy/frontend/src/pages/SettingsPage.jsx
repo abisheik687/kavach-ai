@@ -38,12 +38,20 @@ export default function SettingsPage() {
 
     useEffect(() => {
         // Load settings from localStorage or API
+<<<<<<< HEAD
         const savedNotifications = localStorage.getItem('kavach_notifications');
+=======
+        const savedNotifications = localStorage.getItem('mmdds_notifications');
+>>>>>>> 7df14d1 (UI enhanced)
         if (savedNotifications) {
             setNotifications(JSON.parse(savedNotifications));
         }
 
+<<<<<<< HEAD
         const savedApiKey = localStorage.getItem('kavach_api_key');
+=======
+        const savedApiKey = localStorage.getItem('mmdds_api_key');
+>>>>>>> 7df14d1 (UI enhanced)
         if (savedApiKey) {
             setApiKey(savedApiKey);
         }
@@ -51,9 +59,15 @@ export default function SettingsPage() {
 
     const handleSave = () => {
         // Save to localStorage (in production, this would be an API call)
+<<<<<<< HEAD
         localStorage.setItem('kavach_notifications', JSON.stringify(notifications));
         if (apiKey) {
             localStorage.setItem('kavach_api_key', apiKey);
+=======
+        localStorage.setItem('mmdds_notifications', JSON.stringify(notifications));
+        if (apiKey) {
+            localStorage.setItem('mmdds_api_key', apiKey);
+>>>>>>> 7df14d1 (UI enhanced)
         }
 
         setSaved(true);

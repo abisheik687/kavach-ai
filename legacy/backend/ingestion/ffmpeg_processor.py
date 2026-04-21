@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI FFmpeg Processor
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques FFmpeg Processor
+>>>>>>> 7df14d1 (UI enhanced)
 Hardware-accelerated video and audio processing using FFmpeg
 NO API KEYS REQUIRED - All processing is local
 """

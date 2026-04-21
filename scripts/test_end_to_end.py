@@ -18,10 +18,17 @@ from backend.database import SessionLocal, ScanResult, User
 client = TestClient(app)
 
 def test_full_flow():
+<<<<<<< HEAD
     print("🚀 Starting KAVACH-AI End-to-End Test...")
 
     # 1. Setup: Register a unique user for this test run
     email = f"officer_{int(time.time())}@kavach.ai"
+=======
+    print("🚀 Starting Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques End-to-End Test...")
+
+    # 1. Setup: Register a unique user for this test run
+    email = f"officer_{int(time.time())}@multimodal-deepfake-detection.ai"
+>>>>>>> 7df14d1 (UI enhanced)
     password = "SafePassword123!"
     
     print(f"\n1. Registering User: {email}...")

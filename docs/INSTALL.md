@@ -1,6 +1,10 @@
 # 🏗️ Production Deployment & Cluster Orchestration
 
+<<<<<<< HEAD
 This guide provides the definitive protocol for deploying **KAVACH-AI v2.0** in both development and high-availability production environments.
+=======
+This guide provides the definitive protocol for deploying **Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques v2.0** in both development and high-availability production environments.
+>>>>>>> 7df14d1 (UI enhanced)
 
 ## 1. Minimal Hardware Requirements
 To run the Hyper-Modal Ensemble at peak performance, we recommend:
@@ -10,7 +14,11 @@ To run the Hyper-Modal Ensemble at peak performance, we recommend:
 - **Storage**: 500GB NVMe SSD (High I/O for Kafka/MinIO).
 
 ## 2. Theoretical Deployment Architecture
+<<<<<<< HEAD
 KAVACH-AI utilizes a **Decentralized Forensic Hub** model where nodes can be geographically distributed but logically centralized via the **Mission Control Agency**.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques utilizes a **Decentralized Forensic Hub** model where nodes can be geographically distributed but logically centralized via the **Mission Control Agency**.
+>>>>>>> 7df14d1 (UI enhanced)
 
 ---
 
@@ -19,7 +27,11 @@ KAVACH-AI utilizes a **Decentralized Forensic Hub** model where nodes can be geo
 ### Quick Initialization
 ```bash
 # 1. Clone & Enter Hub
+<<<<<<< HEAD
 git clone https://github.com/abisheik687/kavach-ai.git && cd kavach-ai
+=======
+git clone https://github.com/abisheik687/Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques.git && cd Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 
 # 2. Master Bootstrap
 # This script handles Venv, Dependencies, and Directory Signatures
@@ -60,4 +72,8 @@ The system automatically scales forensic pods based on the **Prometheus** metric
 - **Storage Overflow**: Adjust data retention policies in `backend/config.py`.
 
 ---
+<<<<<<< HEAD
 *Operational Document — KAVACH-AI Mission Control*
+=======
+*Operational Document — Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Mission Control*
+>>>>>>> 7df14d1 (UI enhanced)

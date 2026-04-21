@@ -1,5 +1,9 @@
 ### A. PROJECT OVERVIEW
+<<<<<<< HEAD
 **What this system does:** KAVACH-AI (DeepShield AI) is a real-time deepfake detection and threat intelligence system that operates entirely locally without external API dependencies. 
+=======
+**What this system does:** Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques (DeepShield AI) is a real-time deepfake detection and threat intelligence system that operates entirely locally without external API dependencies. 
+>>>>>>> 7df14d1 (UI enhanced)
 **Core purpose and use case:** It is designed to identify synthetic media and deepfakes across images, videos, live streams (YouTube, RTSP), and web pages (via browser extension). It provides forensic evidence, risk scoring, and threat monitoring for security personnel.
 **Intended user flow:** A security officer or admin logs in to the dashboard. They can initiate manual file scans, connect to live streams, or use a browser extension to analyze content. The backend orchestrator processes the media through multiple AI models concurrently, aggregates the results, and displays actionable verdicts, confidence scores, and Grad-CAM heatmaps to the user, generating immutable alerts for high-risk detections.
 

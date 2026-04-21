@@ -30,7 +30,11 @@ async def get_agency_status(db: AsyncSession = Depends(get_db)):
     total_investigations = result.scalar() or 0
 
     return {
+<<<<<<< HEAD
         "agency_name": "KAVACH-AI Mission Control",
+=======
+        "agency_name": "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Mission Control",
+>>>>>>> 7df14d1 (UI enhanced)
         "active_agents": [
             {
                 "name": "Fact-Checker Agent",

@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Synthetic Data Generator — Bootstrap Fallback
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Synthetic Data Generator — Bootstrap Fallback
+>>>>>>> 7df14d1 (UI enhanced)
 =======================================================
 Generates synthetic (label=1) training samples from real face images
 using heavy augmentation to simulate deepfake-like visual artefacts.
@@ -158,7 +162,11 @@ def generate_synthetic(
 
 
 def main():
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description='KAVACH-AI Synthetic Generator')
+=======
+    parser = argparse.ArgumentParser(description='Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Synthetic Generator')
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument('--real_dir',    required=True, type=Path)
     parser.add_argument('--output_dir',  required=True, type=Path)
     parser.add_argument('--n_samples',   default=2000,  type=int)

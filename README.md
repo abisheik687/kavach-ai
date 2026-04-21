@@ -4,7 +4,11 @@ Internal trace:
 - Fixed now: the README keeps the professional overview but switches startup guidance to structured multi-step commands for Docker and manual local development.
 -->
 
+<<<<<<< HEAD
 # KAVACH-AI
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 
 <p align="center">
   <strong>DeepShield AI for upload-first deepfake detection</strong><br />
@@ -12,7 +16,11 @@ Internal trace:
 </p>
 
 <p align="center">
+<<<<<<< HEAD
   <img src="./docs/assets/banner.png" alt="KAVACH-AI banner" width="100%" />
+=======
+  <img src="./docs/assets/banner.png" alt="Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques banner" width="100%" />
+>>>>>>> 7df14d1 (UI enhanced)
 </p>
 
 <p align="center">
@@ -26,7 +34,11 @@ Internal trace:
 
 ## Project Understanding
 
+<<<<<<< HEAD
 KAVACH-AI is a **web-first deepfake detection platform** built around one reliable user journey: **upload, analyse, review, repeat**.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques is a **web-first deepfake detection platform** built around one reliable user journey: **upload, analyse, review, repeat**.
+>>>>>>> 7df14d1 (UI enhanced)
 
 The repository was cleaned and reorganized so the active application is easy to understand:
 
@@ -190,8 +202,13 @@ This is the fastest and most reliable way to run the project on a fresh system.
 #### 1. Clone the repository
 
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/abisheik687/kavach-ai.git
 cd kavach-ai
+=======
+git clone https://github.com/abisheik687/Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques.git
+cd Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 ```
 
 #### 2. Create environment files
@@ -238,8 +255,13 @@ Use this if you do not want Docker.
 ### 2. Clone the repository
 
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/abisheik687/kavach-ai.git
 cd kavach-ai
+=======
+git clone https://github.com/abisheik687/Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques.git
+cd Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
+>>>>>>> 7df14d1 (UI enhanced)
 ```
 
 ### 3. Create environment files

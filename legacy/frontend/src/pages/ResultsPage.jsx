@@ -40,7 +40,11 @@ export default function ResultsPage() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
+<<<<<<< HEAD
             a.download = `kavach_forensic_${alertId}.pdf`;
+=======
+            a.download = `mmdds_forensic_${alertId}.pdf`;
+>>>>>>> 7df14d1 (UI enhanced)
             a.click();
             URL.revokeObjectURL(url);
             toast('Evidence PDF downloaded!', 'success');

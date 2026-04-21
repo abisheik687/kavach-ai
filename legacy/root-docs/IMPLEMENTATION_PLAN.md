@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI Implementation Plan
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Implementation Plan
+>>>>>>> 7df14d1 (UI enhanced)
 **Complete Deepfake Detection Platform - Production Ready**
 
 ---
@@ -385,7 +389,11 @@
 - Create `backend/seeds/demo_data.py`
 **Features:**
 - "Try Demo" button on landing page
+<<<<<<< HEAD
 - Auto-fill credentials (demo@kavach.ai / demo1234)
+=======
+- Auto-fill credentials (demo@multimodal-deepfake-detection.ai / demo1234)
+>>>>>>> 7df14d1 (UI enhanced)
 - Pre-seeded detection results
 - Pre-seeded alerts
 - Read-only demo account

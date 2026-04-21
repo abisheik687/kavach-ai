@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Training Dataset — PyTorch Dataset class
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Training Dataset — PyTorch Dataset class
+>>>>>>> 7df14d1 (UI enhanced)
 ===================================================
 Reads dataset_manifest.csv.
 Applies augmentation pipeline on training split only.
@@ -80,7 +84,11 @@ def build_transforms(split: Literal['train','val','test']) -> transforms.Compose
 
 class DeepfakeDataset(Dataset):
     """
+<<<<<<< HEAD
     KAVACH-AI deepfake detection dataset.
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques deepfake detection dataset.
+>>>>>>> 7df14d1 (UI enhanced)
     Reads from dataset_manifest.csv.
 
     Args:

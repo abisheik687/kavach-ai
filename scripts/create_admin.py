@@ -10,7 +10,11 @@ from backend.api.auth import get_password_hash
 
 def create_admin():
     db = SessionLocal()
+<<<<<<< HEAD
     email = "admin@kavach.ai"
+=======
+    email = "admin@multimodal-deepfake-detection.ai"
+>>>>>>> 7df14d1 (UI enhanced)
     password = "admin"
     
     user = db.query(User).filter(User.email == email).first()

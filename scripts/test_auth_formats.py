@@ -5,7 +5,11 @@ url = "http://localhost:8000/auth/token"
 
 # Frontend sends FormData, which axios converts to application/x-www-form-urlencoded
 data = {
+<<<<<<< HEAD
     'username': 'admin@kavach.ai',
+=======
+    'username': 'admin@multimodal-deepfake-detection.ai',
+>>>>>>> 7df14d1 (UI enhanced)
     'password': 'Kavach@2026'
 }
 

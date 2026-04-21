@@ -6,7 +6,11 @@ from typing import Optional
 from backend.database import User, ScanResult, AuditLog, Alert, Detection
 from backend.api.auth import get_password_hash
 
+<<<<<<< HEAD
 # KAVACH-AI: CRUD for scans, detections, alerts
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques: CRUD for scans, detections, alerts
+>>>>>>> 7df14d1 (UI enhanced)
 
 async def create_detection(db: AsyncSession, result_dict: dict, file_hash: Optional[str] = None, filename: Optional[str] = None, owner_id: Optional[int] = None) -> ScanResult:
     """Save orchestration result to scan_results table. Returns the created ORM object."""

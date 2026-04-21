@@ -13,7 +13,11 @@ from backend.config import settings
 from backend.api.rate_limit import limiter
 import logging
 
+<<<<<<< HEAD
 # KAVACH-AI Day 10: JWT Authentication
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 10: JWT Authentication
+>>>>>>> 7df14d1 (UI enhanced)
 # Handles login and token generation
 
 SECRET_KEY = settings.SECRET_KEY

@@ -6,7 +6,11 @@ import torch.nn as nn
 
 class AudioFeatureExtractor:
     """
+<<<<<<< HEAD
     KAVACH-AI Day 3: Audio Feature Extractor
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 3: Audio Feature Extractor
+>>>>>>> 7df14d1 (UI enhanced)
     Extracts Mel-Spectrograms and MFCCs for Deepfake Audio Detection.
     """
     

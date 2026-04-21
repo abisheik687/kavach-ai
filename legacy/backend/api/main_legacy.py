@@ -12,14 +12,22 @@ from backend.database import get_db, engine, Base
 from backend.database import User
 from backend.api.auth import auth_router, get_current_user
 
+<<<<<<< HEAD
 # KAVACH-AI Day 10: API Expansion
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 10: API Expansion
+>>>>>>> 7df14d1 (UI enhanced)
 # Added: Auth Router, Chunked Uploads
 
 # Initialize generic DB if not exists (for dev convenience)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
+<<<<<<< HEAD
     title="KAVACH-AI Deepfake Detection API",
+=======
+    title="Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Deepfake Detection API",
+>>>>>>> 7df14d1 (UI enhanced)
     description="Multimodal Deepfake Detection System (Video + Audio + Temporal)",
     version="1.0.0"
 )
@@ -56,7 +64,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 @app.get("/")
 @limiter.limit("60/minute")
 def health_check(request: Request):
+<<<<<<< HEAD
     return {"status": "active", "system": "KAVACH-AI", "version": "1.0.0"}
+=======
+    return {"status": "active", "system": "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques", "version": "1.0.0"}
+>>>>>>> 7df14d1 (UI enhanced)
 
 from backend.crud import create_scan_result, log_action
 

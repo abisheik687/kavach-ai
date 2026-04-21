@@ -1,7 +1,13 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Model Trainer
 =======================
 Fine-tunes any KAVACH-AI model from model_config.yaml.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Trainer
+=======================
+Fine-tunes any Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques model from model_config.yaml.
+>>>>>>> 7df14d1 (UI enhanced)
 
 Features:
   - HuggingFace + timm model loading
@@ -43,7 +49,11 @@ import mlflow
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from training.dataset import build_dataloaders
 
+<<<<<<< HEAD
 log = logging.getLogger('kavach.train')
+=======
+log = logging.getLogger('mmdds.train')
+>>>>>>> 7df14d1 (UI enhanced)
 
 
 # ── Reproducibility ────────────────────────────────────────────────
@@ -260,14 +270,22 @@ def train(cfg_path: str, model_key: str, overrides: dict) -> Path:
     if cfg.get('wandb_enabled') and os.environ.get('WANDB_API_KEY'):
         import wandb
         wandb_run = wandb.init(
+<<<<<<< HEAD
             project=cfg.get('wandb_project', 'kavach-ai'),
+=======
+            project=cfg.get('wandb_project', 'Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques'),
+>>>>>>> 7df14d1 (UI enhanced)
             name=cfg['model_name'],
             config=cfg,
         )
         
     # MLflow Setup
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"))
+<<<<<<< HEAD
     mlflow.set_experiment(cfg.get("mlflow_experiment", "kavach-ai-training"))
+=======
+    mlflow.set_experiment(cfg.get("mlflow_experiment", "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques-training"))
+>>>>>>> 7df14d1 (UI enhanced)
     
     with mlflow.start_run(run_name=cfg['model_name']) as run:
         mlflow.log_params(cfg)
@@ -467,7 +485,11 @@ def export_onnx(model: nn.Module, cfg: dict,
 
 # ── CLI ────────────────────────────────────────────────────────────
 def main():
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description='KAVACH-AI Model Trainer')
+=======
+    parser = argparse.ArgumentParser(description='Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Trainer')
+>>>>>>> 7df14d1 (UI enhanced)
     parser.add_argument('--model',      required=True,
                         choices=['vit_primary','vit_secondary','efficientnet',
                                  'xception','convnext'],

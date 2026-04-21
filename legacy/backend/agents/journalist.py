@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — Journalist Agent
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Journalist Agent
+>>>>>>> 7df14d1 (UI enhanced)
 Generates public-facing, easy-to-understand debunking summaries for social media.
 """
 
@@ -28,7 +32,11 @@ class JournalistAgent:
         if verdict == "FAKE" or (isinstance(risk, (int, float)) and risk >= 65):
             summary = (
                 f"🚨 DEEPFAKE ALERT 🚨\n\n"
+<<<<<<< HEAD
                 f"KAVACH-AI has detected a high-probability synthetic manipulation in this media. "
+=======
+                f"Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques has detected a high-probability synthetic manipulation in this media. "
+>>>>>>> 7df14d1 (UI enhanced)
                 f"Our forensic ensemble suggests a {confidence:.2f}% probability of AI generation. "
                 f"Key artifacts found in temporal consistency and facial geometry.\n\n"
                 f"#Deepfake #KAVACHAI #CyberSecurity #FactCheck"
@@ -43,7 +51,11 @@ class JournalistAgent:
         else:
             summary = (
                 f"✅ VERIFIED REAL ✅\n\n"
+<<<<<<< HEAD
                 f"KAVACH-AI analysis indicates this media is likely authentic. "
+=======
+                f"Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques analysis indicates this media is likely authentic. "
+>>>>>>> 7df14d1 (UI enhanced)
                 f"All forensic models show natural motion and high visual fidelity.\n\n"
                 f"#Verified #Truth #KAVACHAI"
             )

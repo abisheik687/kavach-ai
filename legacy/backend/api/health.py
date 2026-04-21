@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 """Health check endpoint for KAVACH-AI."""
+=======
+"""Health check endpoint for Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques."""
+>>>>>>> 7df14d1 (UI enhanced)
 import time
 import torch
 from fastapi import APIRouter, Depends

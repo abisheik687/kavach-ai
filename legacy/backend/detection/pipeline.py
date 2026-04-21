@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Detection Pipeline
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Detection Pipeline
+>>>>>>> 7df14d1 (UI enhanced)
 Handles both file-based analysis and real-time frame analysis for live camera scanning.
 Uses real model inference (inference_service) when available; falls back to heuristics otherwise.
 """
@@ -244,7 +248,11 @@ def analyze_frame(
 
 class DetectionPipeline:
     """
+<<<<<<< HEAD
     KAVACH-AI Day 9: Core Detection Controller
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 9: Core Detection Controller
+>>>>>>> 7df14d1 (UI enhanced)
     Orchestrates Day 2 (Video), Day 3 (Audio), and Day 6 (Fusion) logic.
     """
     def __init__(self):

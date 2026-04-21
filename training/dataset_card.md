@@ -1,15 +1,27 @@
 # training/dataset_card.md
 ---
+<<<<<<< HEAD
 dataset_name: KAVACH-AI Deepfake Detection Dataset
+=======
+dataset_name: Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Deepfake Detection Dataset
+>>>>>>> 7df14d1 (UI enhanced)
 version: 1.0.0
 task: binary-classification
 labels: [0=real, 1=deepfake]
 input_format: PNG, 224x224, RGB, aligned face crop
+<<<<<<< HEAD
 created_by: KAVACH-AI pipeline
 ---
 
 ## Overview
 Binary deepfake detection dataset for fine-tuning KAVACH-AI ensemble models.
+=======
+created_by: Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques pipeline
+---
+
+## Overview
+Binary deepfake detection dataset for fine-tuning Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques ensemble models.
+>>>>>>> 7df14d1 (UI enhanced)
 Faces extracted from source datasets using MTCNN with 5-point landmark alignment.
 
 ## Label Schema

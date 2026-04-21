@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI backend configuration.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques backend configuration.
+>>>>>>> 7df14d1 (UI enhanced)
 All settings are read from environment variables (or .env file).
 """
 
@@ -13,7 +17,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+<<<<<<< HEAD
     app_name: str = 'KAVACH-AI'
+=======
+    app_name: str = 'Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques'
+>>>>>>> 7df14d1 (UI enhanced)
     app_version: str = '2.0.0'
     environment: str = 'development'
     host: str = '0.0.0.0'
@@ -31,8 +39,13 @@ class Settings(BaseSettings):
         ]
     )
 
+<<<<<<< HEAD
     model_cache_dir: Path = Path(tempfile.gettempdir()) / 'kavach-ai' / 'models'
     temp_dir: Path = Path(tempfile.gettempdir()) / 'kavach-ai' / 'uploads'
+=======
+    model_cache_dir: Path = Path(tempfile.gettempdir()) / 'Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques' / 'models'
+    temp_dir: Path = Path(tempfile.gettempdir()) / 'Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques' / 'uploads'
+>>>>>>> 7df14d1 (UI enhanced)
     upload_chunk_size_bytes: int = 1024 * 1024
     max_image_audio_bytes: int = 20 * 1024 * 1024
     max_video_bytes: int = 100 * 1024 * 1024

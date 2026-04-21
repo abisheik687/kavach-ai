@@ -1,5 +1,9 @@
 /**
+<<<<<<< HEAD
  * KAVACH-AI Mobile — World-Class Deepfake Detection
+=======
+ * Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Mobile — World-Class Deepfake Detection
+>>>>>>> 7df14d1 (UI enhanced)
  * React Native + ONNX Runtime Mobile (Offline Inference)
  */
 
@@ -68,7 +72,11 @@ export default function App() {
       <StatusBar barStyle="light-content" />
       
       <View style={styles.header}>
+<<<<<<< HEAD
         <Text style={styles.title}>KAVACH-AI <Text style={styles.v2}>v2.0</Text></Text>
+=======
+        <Text style={styles.title}>Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques <Text style={styles.v2}>v2.0</Text></Text>
+>>>>>>> 7df14d1 (UI enhanced)
         <Text style={styles.subtitle}>Mobile Forensic Node</Text>
       </View>
 

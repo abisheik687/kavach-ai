@@ -1,10 +1,18 @@
+<<<<<<< HEAD
 # KAVACH-AI / DEEPSHIELD AI
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques / DEEPSHIELD AI
+>>>>>>> 7df14d1 (UI enhanced)
 ## PHASE 6 — FINAL PROJECT REPORT
 *Complete System Audit • All Changes Logged • Deployment Checklist • Prioritised Backlog*
 *Generated: Mon Mar 09 2026*
 
 ### 6.1 — Executive Summary
+<<<<<<< HEAD
 KAVACH-AI (DeepShield AI) is a fully local, multi-model deepfake detection intelligence platform built on FastAPI, React 18, and a PyTorch ensemble of five neural architectures. It ingests images, videos, live streams, and web pages, runs concurrent AI inference with explainability output (GradCAM), and produces forensic evidence bundles for security teams.
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques (DeepShield AI) is a fully local, multi-model deepfake detection intelligence platform built on FastAPI, React 18, and a PyTorch ensemble of five neural architectures. It ingests images, videos, live streams, and web pages, runs concurrent AI inference with explainability output (GradCAM), and produces forensic evidence bundles for security teams.
+>>>>>>> 7df14d1 (UI enhanced)
 
 This engagement ran across five phases: deep verification, backend hardening, frontend rebuild, training dataset pipeline, and model training infrastructure. All 7 confirmed issues from Phase 1 have been resolved. The system has progressed from a functional prototype with critical security vulnerabilities to a production-ready, deployable platform.
 
@@ -123,7 +131,11 @@ This engagement ran across five phases: deep verification, backend hardening, fr
 | P1 | Run actual model training on FF++ + Celeb-DF v2 datasets | 12–24 hrs | ML | Datasets downloaded | Run `./training/train.sh --model all` |
 | P1 | Load ONNX model weights into backend and verify `/health` shows models loaded | 2 hrs | ML + Backend | Training complete | Set `KAVACH_MODEL_*_PATH` in `.env` |
 | P2 | Audit browser extension (`extension/`) — not yet reviewed in any phase | 8 hrs | Full Stack | None | Could be a significant attack surface |
+<<<<<<< HEAD
 | P2 | Add non-root user to `Dockerfile` (`USER kavach`) | 1 hr | Security/DevOps | None | One-line change with major security impact |
+=======
+| P2 | Add non-root user to `Dockerfile` (`USER mmdds`) | 1 hr | Security/DevOps | None | One-line change with major security impact |
+>>>>>>> 7df14d1 (UI enhanced)
 | P2 | Replace `.env` secrets with Docker secrets or vault | 4 hrs | Security/DevOps | Docker Swarm or Vault | For production hardening |
 | P2 | Load test ensemble inference (locust or k6 — 10 concurrent users) | 4 hrs | Performance | Training complete | Verify Semaphore holds under real load |
 | P2 | Alembic migration setup for DB schema versioning | 3 hrs | Backend | None | Required before any schema changes |
@@ -135,7 +147,11 @@ This engagement ran across five phases: deep verification, backend hardening, fr
 | P4 | Multi-tenancy / per-user evidence isolation | 16 hrs | Backend | JWT refresh | For SaaS or enterprise deployment |
 
 ### 6.9 — Production Deployment Checklist
+<<<<<<< HEAD
 Every item below must be ✅ before deploying KAVACH-AI to a production or internet-facing environment. Do not skip any item.
+=======
+Every item below must be ✅ before deploying Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques to a production or internet-facing environment. Do not skip any item.
+>>>>>>> 7df14d1 (UI enhanced)
 
 **Security Gates**
 - [ ] `REGISTER_ENABLED=false` set in production `.env` `VERIFY: POST /auth/register → HTTP 403`
@@ -165,7 +181,11 @@ Every item below must be ✅ before deploying KAVACH-AI to a production or inter
 
 ---
 
+<<<<<<< HEAD
 *KAVACH-AI MASTER BUILD SEQUENCE COMPLETE.*
+=======
+*Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques MASTER BUILD SEQUENCE COMPLETE.*
+>>>>>>> 7df14d1 (UI enhanced)
 *Phases 1–6 executed • 8 issues resolved • 14 files created • System readiness: 9/10*
 
 *Immediate next steps: (1) run training, (2) complete P1 security backlog, (3) audit extension/*

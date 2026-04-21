@@ -1,5 +1,6 @@
 """
-Smoke tests for the KAVACH-AI upload pipeline.
+Smoke tests for the Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques upload pipeline.
+
 These tests run in CI with ENABLE_REMOTE_MODEL_DOWNLOADS=false (fallback mode).
 They validate the API contract, not model accuracy.
 """

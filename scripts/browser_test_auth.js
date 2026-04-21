@@ -3,7 +3,11 @@
 
 const testLogin = async () => {
     const formData = new FormData();
+<<<<<<< HEAD
     formData.append('username', 'admin@kavach.ai');
+=======
+    formData.append('username', 'admin@multimodal-deepfake-detection.ai');
+>>>>>>> 7df14d1 (UI enhanced)
     formData.append('password', 'Kavach@2026');
 
     console.log('Testing login to http://localhost:8000/auth/token');

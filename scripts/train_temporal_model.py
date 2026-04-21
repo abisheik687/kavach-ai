@@ -9,7 +9,11 @@ import argparse
 from tqdm import tqdm
 from backend.models.temporal import TemporalDeepfakeDetector
 
+<<<<<<< HEAD
 # KAVACH-AI Day 5: Temporal Model Training
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 5: Temporal Model Training
+>>>>>>> 7df14d1 (UI enhanced)
 # Trains LSTM on sequences of features
 
 class DummySequenceDataset(Dataset):

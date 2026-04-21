@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI — Adversarial Robustness Suite
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques — Adversarial Robustness Suite
+>>>>>>> 7df14d1 (UI enhanced)
 Implements FGSM (Fast Gradient Sign Method) for ensemble stress testing.
 """
 

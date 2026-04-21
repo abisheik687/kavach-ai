@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Stream Manager
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Stream Manager
+>>>>>>> 7df14d1 (UI enhanced)
 Unified interface for managing multiple live stream sources
 NO API KEYS REQUIRED - All sources are publicly accessible
 """

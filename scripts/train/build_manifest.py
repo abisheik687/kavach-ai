@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
+<<<<<<< HEAD
 KAVACH-AI Manifest Builder
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Manifest Builder
+>>>>>>> 7df14d1 (UI enhanced)
 Creates train/val/test CSV splits from downloaded datasets
 Stratified by fake method for balanced training
 """

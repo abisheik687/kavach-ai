@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 conftest.py — shared test fixtures for KAVACH-AI tests
+=======
+conftest.py — shared test fixtures for Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques tests
+>>>>>>> 7df14d1 (UI enhanced)
 
 Provides:
   - mock_registry: a ModelRegistry with a simple always-0.4 scorer (REAL verdict)

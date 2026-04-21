@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 KAVACH-AI Live Video Call Detection Router
+=======
+Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Live Video Call Detection Router
+>>>>>>> 7df14d1 (UI enhanced)
 Module E: Live Video Call Deepfake Detection
 
 WebRTC-based in-browser stream capture

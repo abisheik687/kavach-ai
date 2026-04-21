@@ -1,9 +1,17 @@
 #!/bin/bash
+<<<<<<< HEAD
 # KAVACH-AI Setup Script v2.0 — World-Class Deepfake Detection
 # NO API KEYS REQUIRED - All processing is local
 
 echo "============================================================"
 echo "  KAVACH-AI v2.0 - Mission Control Setup"
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Setup Script v2.0 — World-Class Deepfake Detection
+# NO API KEYS REQUIRED - All processing is local
+
+echo "============================================================"
+echo "  Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques v2.0 - Mission Control Setup"
+>>>>>>> 7df14d1 (UI enhanced)
 echo "============================================================"
 
 # 1. Environment Verification
@@ -16,7 +24,11 @@ fi
 # 2. Config & Env
 echo "Step 2: Initializing environment configuration..."
 if [ ! -f .env ]; then
+<<<<<<< HEAD
     cp .env.example .env 2>/dev/null || echo "DATABASE_URL=postgresql+asyncpg://kavach:kavach@postgres:5432/kavach" > .env
+=======
+    cp .env.example .env 2>/dev/null || echo "DATABASE_URL=postgresql+asyncpg://mmdds:mmdds@postgres:5432/mmdds" > .env
+>>>>>>> 7df14d1 (UI enhanced)
     echo "Created .env configuration"
 fi
 
@@ -43,7 +55,11 @@ if ! command -v ffmpeg &> /dev/null; then
 fi
 
 echo "============================================================"
+<<<<<<< HEAD
 echo "  KAVACH-AI v2.0 READY"
+=======
+echo "  Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques v2.0 READY"
+>>>>>>> 7df14d1 (UI enhanced)
 echo "============================================================"
 echo ""
 echo "Orchestration Commands:"

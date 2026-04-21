@@ -1,5 +1,9 @@
 """
+<<<<<<< HEAD
 Simple test script to verify KAVACH-AI setup
+=======
+Simple test script to verify Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques setup
+>>>>>>> 7df14d1 (UI enhanced)
 """
 
 from backend.database import init_db, SessionLocal, Stream
@@ -80,7 +84,11 @@ def test_config():
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     logger.info("🛡️  KAVACH-AI System Test")
+=======
+    logger.info("🛡️  Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques System Test")
+>>>>>>> 7df14d1 (UI enhanced)
     logger.info("=" * 50)
     
     test_config()

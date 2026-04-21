@@ -6,7 +6,11 @@ from torchvision import transforms
 
 class FeatureExtractor:
     """
+<<<<<<< HEAD
     KAVACH-AI Day 2: Multi-channel Feature Extractor
+=======
+    Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Day 2: Multi-channel Feature Extractor
+>>>>>>> 7df14d1 (UI enhanced)
     Extracts RGB (Spatial) and FFT (Frequency) features.
     """
     

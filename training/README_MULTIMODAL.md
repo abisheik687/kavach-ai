@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # KAVACH-AI Multimodal Training Guide
+=======
+# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Multimodal Training Guide
+>>>>>>> 7df14d1 (UI enhanced)
 
 The new local training pipeline lives in:
 

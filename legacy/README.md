@@ -4,7 +4,11 @@
 
 # Legacy Archive
 
+<<<<<<< HEAD
 This directory contains code that is no longer part of the active KAVACH-AI runtime.
+=======
+This directory contains code that is no longer part of the active Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques runtime.
+>>>>>>> 7df14d1 (UI enhanced)
 
 Contents:
 
