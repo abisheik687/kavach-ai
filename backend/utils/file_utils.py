@@ -56,11 +56,7 @@ async def persist_upload_to_temp(file: UploadFile, validation) -> Path:
     with tempfile.NamedTemporaryFile(
         delete=False,
         suffix=validation.suffix,
-<<<<<<< HEAD
-        prefix='kavach_',
-=======
-        prefix='mmdds_',
->>>>>>> 7df14d1 (UI enhanced)
+        prefix='kavach_',  #  choose one consistently
         dir=settings.temp_dir,
     ) as handle:
         while True:
@@ -83,14 +79,14 @@ def cleanup_path(path: str | Path) -> None:
         except FileNotFoundError:
             pass
         except PermissionError:
-            # Windows can keep short-lived handles on temp files after a response completes.
             return
+
         parent = target.parent
-<<<<<<< HEAD
-        if parent != settings.temp_dir and parent.exists() and parent.name.startswith('kavach_'):
-=======
-        if parent != settings.temp_dir and parent.exists() and parent.name.startswith('mmdds_'):
->>>>>>> 7df14d1 (UI enhanced)
+        if (
+            parent != settings.temp_dir
+            and parent.exists()
+            and parent.name.startswith('kavach_')  #  keep consistent
+        ):
             shutil.rmtree(parent, ignore_errors=True)
 
 
@@ -108,6 +104,7 @@ def clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
 def find_ffmpeg_binary() -> str | None:
     if settings.ffmpeg_binary and Path(settings.ffmpeg_binary).exists():
         return settings.ffmpeg_binary
+
     system_binary = shutil.which('ffmpeg')
     if system_binary:
         return system_binary

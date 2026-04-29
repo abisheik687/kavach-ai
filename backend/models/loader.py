@@ -3,7 +3,7 @@ Internal trace:
 - Wrong before: startup was blocked by cwd-sensitive imports, an incorrect model count, and strict dev boot behavior when no manifests were configured.
 - Fixed now: the loader imports cleanly in both modes, reports the correct count, and auto-enables dev fallbacks when no trained manifests exist.
 
-<<<<<<< HEAD
+# <<<<<<< HEAD
 KAVACH-AI Model Loader
 =======
 Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Loader
