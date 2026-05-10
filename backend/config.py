@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     audio_timeout_seconds: int = 45
     video_timeout_seconds: int = 120
     max_concurrent_analyses: int = 2
+    demo_safe_results: bool = True
 
     allow_fallback_models: bool = False
     enable_remote_model_downloads: bool = False

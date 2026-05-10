@@ -17,8 +17,8 @@ try:
     from ..pipelines.image_pipeline import analyse_image_file
     from ..pipelines.video_pipeline import analyse_video_file
     from ..schemas.request import UploadValidationInfo, validate_upload
-    from ..schemas.response import AnalysisResult
-    from ..utils.file_utils import cleanup_path, persist_upload_to_temp
+    from ..schemas.response import AnalysisResult, AudioResult
+    from ..utils.file_utils import AppError, cleanup_path, persist_upload_to_temp
     from ..utils.runtime import run_analysis
 except ImportError:
     from config import settings
@@ -27,12 +27,13 @@ except ImportError:
     from pipelines.image_pipeline import analyse_image_file
     from pipelines.video_pipeline import analyse_video_file
     from schemas.request import UploadValidationInfo, validate_upload
-    from schemas.response import AnalysisResult
-    from utils.file_utils import cleanup_path, persist_upload_to_temp
+    from schemas.response import AnalysisResult, AudioResult
+    from utils.file_utils import AppError, cleanup_path, persist_upload_to_temp
     from utils.runtime import run_analysis
 
 
 router = APIRouter(tags=['analysis'])
+SAFE_RESULT_CODES = {'ANALYSIS_TIMEOUT', 'ANALYSIS_STAGE_FAILED', 'VIDEO_ANALYSIS_FAILED'}
 
 
 def _standardize_result(result: AnalysisResult, processing_time_ms: int, model_versions: dict[str, str]) -> AnalysisResult:
@@ -44,6 +45,40 @@ def _standardize_result(result: AnalysisResult, processing_time_ms: int, model_v
     result.processing_time = f'{processing_time_ms} ms'
     result.model_versions = model_versions
     return result
+
+
+def _safe_fallback_result(file_type: str, stage: str, code: str, model_versions: dict[str, str]) -> AnalysisResult:
+    warning = f'{stage} failed or timed out; returned safe fallback result'
+    result = AnalysisResult(
+        type=file_type,
+        prediction='uncertain',
+        confidence=50.0,
+        processing_time='0 ms',
+        file_type=file_type,
+        verdict='UNCERTAIN',
+        overall_confidence=0.5,
+        fake_probability=0.5,
+        warnings=[warning, f'Diagnostic code: {code}'],
+        model_versions=model_versions,
+    )
+    if file_type == 'audio':
+        result.audio_result = AudioResult(
+            verdict='UNCERTAIN',
+            fake_probability=0.5,
+            waveform=[],
+            mode='safe-fallback',
+            model='safe-fallback',
+        )
+    return result
+
+
+async def _run_demo_safe(coro, *, timeout_seconds: int, stage: str, validation: UploadValidationInfo, model_versions: dict[str, str]) -> AnalysisResult:
+    try:
+        return await run_analysis(coro, timeout_seconds=timeout_seconds, stage=stage)
+    except AppError as exc:
+        if settings.demo_safe_results and exc.code in SAFE_RESULT_CODES:
+            return _safe_fallback_result(validation.file_type, stage, exc.code, model_versions)
+        raise
 
 
 @router.post('/analyse', response_model=AnalysisResult)
@@ -59,22 +94,28 @@ async def analyse(
     registry = get_model_registry()
 
     if validation.file_type == 'image':
-        result = await run_analysis(
+        result = await _run_demo_safe(
             analyse_image_file(temp_path, registry, validation),
             timeout_seconds=settings.image_timeout_seconds,
             stage='Image analysis',
+            validation=validation,
+            model_versions=registry.model_versions,
         )
     elif validation.file_type == 'video':
-        result = await run_analysis(
+        result = await _run_demo_safe(
             analyse_video_file(temp_path, registry, validation, background_tasks),
             timeout_seconds=settings.video_timeout_seconds,
             stage='Video analysis',
+            validation=validation,
+            model_versions=registry.model_versions,
         )
     else:
-        result = await run_analysis(
+        result = await _run_demo_safe(
             analyse_audio_file(temp_path, registry, validation),
             timeout_seconds=settings.audio_timeout_seconds,
             stage='Audio analysis',
+            validation=validation,
+            model_versions=registry.model_versions,
         )
 
     processing_time_ms = int((time.perf_counter() - started_at) * 1000)

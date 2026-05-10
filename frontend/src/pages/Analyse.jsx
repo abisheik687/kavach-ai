@@ -7,7 +7,7 @@ import ProgressBar from '../components/ProgressBar.jsx';
 import { useDropZone } from '../hooks/useDropZone.js';
 
 const surfaceCards = [
-  { title: 'Images', detail: 'PNG, JPEG, WEBP', icon: ImageIcon },
+  { title: 'Images', detail: 'PNG, JPEG, WEBP, GIF', icon: ImageIcon },
   { title: 'Videos', detail: 'MP4, WEBM · up to 100 MB', icon: Film },
   { title: 'Audio', detail: 'WAV, MP3, OGG', icon: AudioLines },
 ];

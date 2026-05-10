@@ -231,7 +231,24 @@ async def analyse_video_file(file_path: Path, registry: ModelRegistry, validatio
             )
 
     if not frame_scores:
-        raise AppError(422, 'Video frames could not be analysed reliably.', 'VIDEO_ANALYSIS_FAILED')
+        if not settings.demo_safe_results:
+            raise AppError(422, 'Video frames could not be analysed reliably.', 'VIDEO_ANALYSIS_FAILED')
+        warnings.append('Video frames could not be analysed reliably; returned safe fallback result')
+        return AnalysisResult(
+            type=validation.file_type,
+            prediction='uncertain',
+            confidence=50.0,
+            processing_time='0 ms',
+            file_type=validation.file_type,
+            verdict='UNCERTAIN',
+            overall_confidence=0.5,
+            fake_probability=0.5,
+            model_scores=[],
+            video_frame_scores=[],
+            video_frame_previews=[],
+            audio_result=None,
+            warnings=list(dict.fromkeys(warnings)),
+        )
 
     fake_probability, verdict, confidence = aggregate_video_scores(frame_scores)
     averaged_model_scores = _average_model_scores(model_scores_per_frame)

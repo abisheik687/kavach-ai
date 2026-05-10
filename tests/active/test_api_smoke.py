@@ -116,6 +116,6 @@ def test_invalid_file_type_returns_documented_error_shape(client: TestClient) ->
     )
     assert response.status_code == 422
     assert response.json() == {
-        'error': 'Unsupported file type. Allowed: JPEG, PNG, WEBP, MP4, WEBM, WAV, MP3, OGG.',
+        'error': 'Unsupported file type. Allowed: JPEG, PNG, WEBP, GIF, MP4, WEBM, WAV, MP3, OGG.',
         'code': 'INVALID_FILE_TYPE',
     }
