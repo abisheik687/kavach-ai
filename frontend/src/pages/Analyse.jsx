@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, AudioLines, Coins, Film, Image as ImageIcon, ShieldCheck, Upload, Workflow } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -25,6 +25,7 @@ function Analyse({ analysis }) {
   const navigate = useNavigate();
   const dropzone = useDropZone();
   const inputRef = useRef(null);
+  const [showPaidConfirm, setShowPaidConfirm] = useState(false);
 
   const onBrowse = () => inputRef.current?.click();
 
@@ -47,7 +48,25 @@ function Analyse({ analysis }) {
     }
   };
 
+  const onPaidClick = () => {
+    if (!dropzone.file) {
+      dropzone.setError('Choose a supported image, video, or audio file before starting paid deep analysis.');
+      return;
+    }
+    setShowPaidConfirm(true);
+  };
+
+  const confirmPaidAnalysis = async () => {
+    setShowPaidConfirm(false);
+    await onSubmit('paid');
+  };
+
   const busy = !['idle', 'done', 'error'].includes(analysis.status);
+  const selectedMediaType = dropzone.file?.type?.startsWith('video/')
+    ? 'video'
+    : dropzone.file?.type?.startsWith('audio/')
+    ? 'audio'
+    : 'image';
 
   return (
     <div className="scan-shell px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
@@ -142,7 +161,7 @@ function Analyse({ analysis }) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => onSubmit('paid')}
+                onClick={onPaidClick}
                 className="action-secondary heading-font inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40"
                 title="Runs only when clicked and may use configured Hugging Face credits."
               >
@@ -218,6 +237,58 @@ function Analyse({ analysis }) {
           </aside>
         </div>
       </div>
+
+      {showPaidConfirm ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)' }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="paid-analysis-title"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="panel w-full max-w-lg rounded-2xl p-6 sm:p-7"
+          >
+            <div
+              className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl"
+              style={{ border: '1px solid rgba(251,191,36,0.26)', background: 'rgba(251,191,36,0.09)', color: '#fbbf24' }}
+            >
+              <Coins size={20} />
+            </div>
+            <p className="section-kicker" style={{ fontSize: '0.65rem', color: '#fbbf24' }}>Hugging Face credit confirmation</p>
+            <h2 id="paid-analysis-title" className="heading-font mt-2 text-2xl" style={{ color: 'var(--text-primary)' }}>
+              Run paid deep analysis?
+            </h2>
+            <p className="label-font mt-3 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              This will analyse the selected {selectedMediaType} with the paid Hugging Face deep-scan path if it is configured.
+              The backend checks the $25 budget cap, caches this file for 48 hours, and avoids another paid call for the same upload.
+            </p>
+            <div className="mt-5 rounded-xl px-4 py-3" style={{ border: '1px solid rgba(251,191,36,0.22)', background: 'rgba(251,191,36,0.07)' }}>
+              <p className="label-font text-sm leading-relaxed" style={{ color: '#fde68a' }}>
+                Use this only when Free Analyse is uncertain or when you want the strongest review result.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowPaidConfirm(false)}
+                className="action-secondary label-font inline-flex justify-center rounded-full px-5 py-3 text-sm font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmPaidAnalysis}
+                className="action-primary heading-font inline-flex justify-center rounded-full px-5 py-3 text-sm transition"
+              >
+                Yes, use HF credits
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
     </div>
   );
 }
