@@ -90,7 +90,7 @@ def test_analyse_image_returns_live_model_scores(client: TestClient) -> None:
     assert payload['prediction'] in {'real', 'fake', 'uncertain'}
     assert 0.0 <= payload['confidence'] <= 100.0
     assert payload['processing_time'].endswith(' ms')
-    assert len(payload['model_scores']) == 4
+    assert len(payload['model_scores']) >= 4
     assert payload['audio_result'] is None
 
 

@@ -35,13 +35,13 @@ try:
     from ..utils.logger import get_logger
     from .artifact_loader import load_audio_artifact, load_image_artifact, load_video_artifact
     from .audio_model import AudioModelHandle, build_audio_model, build_fallback_audio_model
-    from .image_models import ImageModelSlot, create_fallback_scorer, create_image_slots
+    from .image_models import ImageModelSlot, create_fallback_scorer, create_image_slots, create_local_ai_image_detector_slot
     from .video_model import VideoModelHandle, build_video_model
 except ImportError:
     from config import settings
     from models.artifact_loader import load_audio_artifact, load_image_artifact, load_video_artifact
     from models.audio_model import AudioModelHandle, build_audio_model, build_fallback_audio_model
-    from models.image_models import ImageModelSlot, create_fallback_scorer, create_image_slots
+    from models.image_models import ImageModelSlot, create_fallback_scorer, create_image_slots, create_local_ai_image_detector_slot
     from models.video_model import VideoModelHandle, build_video_model
     from utils.logger import get_logger
 
@@ -174,6 +174,17 @@ async def _load_models() -> None:
         remote_available = _can_reach_huggingface()
         if not remote_available:
             _registry.warnings.append('HF remote inference disabled; using free local forensic fallback scorers')
+
+        local_ai_slot = create_local_ai_image_detector_slot()
+        if local_ai_slot is not None:
+            try:
+                infer, mode = local_ai_slot.loader()
+                _registry.image_models.append(LoadedImageModel(slot=local_ai_slot, infer=infer, mode=mode))
+                _registry.model_versions[local_ai_slot.label] = local_ai_slot.repo_id
+                _registry.warnings.append('AI Image Detector loaded locally for synthetic/non-face AI creations')
+            except Exception as exc:
+                logger.warning('local_ai_image_detector_unavailable', extra={'error': str(exc)})
+
         for slot in create_image_slots():
             if not remote_available:
                 infer = create_fallback_scorer(slot.key)

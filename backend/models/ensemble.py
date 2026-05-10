@@ -45,6 +45,9 @@ def combine_weighted_scores(scores: list[tuple[float, float]], threshold: float 
     max_fake_signal = max(prob for prob, _ in scores)
     fake_probability = (0.6 * weighted_mean) + (0.4 * max_fake_signal)
     spread = max(prob for prob, _ in scores) - min(prob for prob, _ in scores)
+    if settings.detection_profile.strip().lower() == 'review':
+        verdict, confidence = classify_probability(fake_probability, 'image', threshold)
+        return fake_probability, verdict, confidence
     if spread > settings.disagreement_threshold:
         return fake_probability, 'UNCERTAIN', max(fake_probability, 1.0 - fake_probability)
     verdict, confidence = classify_probability(fake_probability, 'image', threshold)
@@ -56,6 +59,9 @@ def aggregate_video_scores(frame_scores: list[float]) -> tuple[float, str, float
         return 0.5, 'UNCERTAIN', 0.5
     fake_probability = (0.7 * mean(frame_scores)) + (0.3 * max(frame_scores))
     spread = max(frame_scores) - min(frame_scores)
+    if settings.detection_profile.strip().lower() == 'review':
+        verdict, confidence = classify_probability(fake_probability, 'video')
+        return fake_probability, verdict, confidence
     if spread > settings.disagreement_threshold:
         return fake_probability, 'UNCERTAIN', max(fake_probability, 1.0 - fake_probability)
     verdict, confidence = classify_probability(fake_probability, 'video')

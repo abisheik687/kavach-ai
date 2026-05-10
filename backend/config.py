@@ -79,6 +79,8 @@ class Settings(BaseSettings):
     model_efficientnet_repo: str = "Wvolf/EfficientNet_Deepfake"
     model_xception_repo: str = "not-lain/xception-deepfake"
     model_convnext_repo: str = "facebook/convnext-base-224"
+    model_ai_image_detector_path: str | None = "../temp/model-cache/ai-image-detector"
+    model_ai_image_detector_weight: float = 0.55
     model_vit_label_order: str = "fake_first"
     model_efficientnet_label_order: str = "real_first"
     model_xception_label_order: str = "real_first"

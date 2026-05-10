@@ -265,12 +265,13 @@ class ImageModelFactory:
         repo_id: str,
         label_order: LabelOrder,
         model_name: str,
+        local_files_only: bool = False,
     ) -> tuple[Callable[[Image.Image], float], str]:
         import torch
         from transformers import AutoImageProcessor, AutoModelForImageClassification
 
-        processor = AutoImageProcessor.from_pretrained(repo_id)
-        model = AutoModelForImageClassification.from_pretrained(repo_id)
+        processor = AutoImageProcessor.from_pretrained(repo_id, local_files_only=local_files_only)
+        model = AutoModelForImageClassification.from_pretrained(repo_id, local_files_only=local_files_only)
         model.eval().to(self.device)
 
         def infer(image: Image.Image) -> float:
@@ -288,7 +289,7 @@ class ImageModelFactory:
                 return clamp(1.0 - float(sum(probs[index] for index in real_indices)))
             return _fake_probability_from_binary_probs(probs, label_order, model_name)
 
-        return infer, 'primary'
+        return infer, 'local-hf' if local_files_only else 'primary'
 
     def build_timm_classifier(
         self,
@@ -368,6 +369,32 @@ def create_image_slots() -> list[ImageModelSlot]:
             ),
         ),
     ]
+
+
+def create_local_ai_image_detector_slot() -> ImageModelSlot | None:
+    raw_path = settings.model_ai_image_detector_path
+    if not raw_path:
+        return None
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parents[1] / raw_path
+    if not (path / 'config.json').exists():
+        return None
+
+    factory = ImageModelFactory()
+    return ImageModelSlot(
+        key='ai_image_detector',
+        label='AI Image Detector',
+        weight=settings.model_ai_image_detector_weight,
+        repo_id=str(path),
+        label_order='real_first',
+        loader=lambda: factory.build_transformers_classifier(
+            str(path),
+            'real_first',
+            'AI Image Detector',
+            local_files_only=True,
+        ),
+    )
 
 
 def model_label_order_check(known_fake_image_path: str | Path | None = None) -> dict[str, float]:
