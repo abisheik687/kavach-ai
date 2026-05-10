@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from PIL import Image
+
+import cv2
 
 try:
     from ..config import settings
@@ -32,6 +35,17 @@ except ImportError:
 
 DEEP_CACHE_DIR = settings.temp_dir / "deep-analysis-cache"
 DEEP_LEDGER_PATH = settings.temp_dir / "hf_deep_budget_ledger.json"
+
+
+def _hf_token() -> str | None:
+    if settings.hf_token:
+        return settings.hf_token
+    try:
+        from huggingface_hub import get_token
+
+        return get_token()
+    except Exception:
+        return None
 
 
 def _ensure_storage() -> None:
@@ -137,6 +151,10 @@ def _disabled_result(validation: UploadValidationInfo, reason: str) -> AnalysisR
 
 
 def _score_from_hf_payload(payload: Any) -> float:
+    if hasattr(payload, "label") and hasattr(payload, "score"):
+        label = str(payload.label).lower()
+        score = float(payload.score)
+        return clamp(score if "fake" in label or "spoof" in label or "synthetic" in label else 1.0 - score)
     if isinstance(payload, dict):
         if "fake_probability" in payload:
             return clamp(float(payload["fake_probability"]))
@@ -150,6 +168,14 @@ def _score_from_hf_payload(payload: Any) -> float:
         fake_scores = []
         real_scores = []
         for item in payload:
+            if hasattr(item, "label") and hasattr(item, "score"):
+                label = str(item.label).lower()
+                score = float(item.score)
+                if "fake" in label or "spoof" in label or "synthetic" in label:
+                    fake_scores.append(score)
+                if "real" in label or "authentic" in label or "bonafide" in label:
+                    real_scores.append(score)
+                continue
             if not isinstance(item, dict):
                 continue
             label = str(item.get("label", "")).lower()
@@ -190,7 +216,7 @@ def _endpoint_url_from_hub() -> str | None:
         endpoint = get_inference_endpoint(
             name=settings.hf_endpoint_name,
             namespace=settings.hf_endpoint_namespace,
-            token=settings.hf_token,
+            token=_hf_token(),
         )
         if hasattr(endpoint, "resume"):
             endpoint.resume()
@@ -210,7 +236,7 @@ def _scale_endpoint_to_zero() -> None:
         endpoint = get_inference_endpoint(
             name=settings.hf_endpoint_name,
             namespace=settings.hf_endpoint_namespace,
-            token=settings.hf_token,
+            token=_hf_token(),
         )
         if hasattr(endpoint, "scale_to_zero"):
             endpoint.scale_to_zero()
@@ -220,12 +246,72 @@ def _scale_endpoint_to_zero() -> None:
         return
 
 
+def _serverless_model_url(file_type: str) -> str:
+    if file_type == "audio":
+        model_id = settings.hf_deep_audio_model
+    elif file_type == "video":
+        model_id = settings.hf_deep_video_model
+    else:
+        model_id = settings.hf_deep_image_model
+    return f"https://api-inference.huggingface.co/models/{model_id}"
+
+
+def _video_preview_frame(video_path: Path) -> Path:
+    capture = cv2.VideoCapture(str(video_path))
+    try:
+        ok, frame = capture.read()
+        if not ok or frame is None:
+            raise RuntimeError("video did not yield a readable frame")
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        out_path = DEEP_CACHE_DIR / f"video-preview-{int(time.time() * 1000)}.jpg"
+        Image.fromarray(rgb).save(out_path, format="JPEG", quality=92)
+        return out_path
+    finally:
+        capture.release()
+
+
+def _run_serverless_scan(file_path: Path, validation: UploadValidationInfo) -> tuple[float, str]:
+    from huggingface_hub import InferenceClient
+
+    token = _hf_token()
+    if not token:
+        raise RuntimeError("HF token is missing")
+
+    if validation.file_type == "audio":
+        client = InferenceClient(model=settings.hf_deep_audio_model, token=token)
+        payload = client.audio_classification(str(file_path))
+        return _score_from_hf_payload(payload), settings.hf_deep_audio_model
+
+    if validation.file_type == "video":
+        frame_path = _video_preview_frame(file_path)
+        try:
+            client = InferenceClient(model=settings.hf_deep_image_model, token=token)
+            payload = client.image_classification(str(frame_path))
+            return _score_from_hf_payload(payload), f"{settings.hf_deep_image_model}:video-frame"
+        finally:
+            try:
+                frame_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    client = InferenceClient(model=settings.hf_deep_image_model, token=token)
+    payload = client.image_classification(str(file_path))
+    return _score_from_hf_payload(payload), settings.hf_deep_image_model
+
+
 async def _run_paid_hf_scan(file_path: Path, validation: UploadValidationInfo) -> tuple[float, str]:
-    endpoint_url = _endpoint_url_from_hub()
+    mode = settings.hf_deep_mode.strip().lower()
+    if mode == "serverless":
+        return _run_serverless_scan(file_path, validation)
+    endpoint_url = _serverless_model_url(validation.file_type) if mode == "serverless" else _endpoint_url_from_hub()
     if not endpoint_url:
         raise RuntimeError("HF endpoint URL is not configured or could not be resolved")
 
-    headers = {"Authorization": f"Bearer {settings.hf_token}"}
+    token = _hf_token()
+    if not token:
+        raise RuntimeError("HF token is missing")
+
+    headers = {"Authorization": f"Bearer {token}"}
     with file_path.open("rb") as handle:
         content = handle.read()
     async with httpx.AsyncClient(timeout=180.0) as client:
@@ -236,7 +322,7 @@ async def _run_paid_hf_scan(file_path: Path, validation: UploadValidationInfo) -
         )
         response.raise_for_status()
         payload = response.json()
-    if settings.hf_deep_mode.strip().lower() == "endpoint":
+    if mode == "endpoint":
         _scale_endpoint_to_zero()
     return _score_from_hf_payload(payload), endpoint_url
 
@@ -257,8 +343,8 @@ async def analyse_deep_file(
         result = _disabled_result(validation, "Paid Deep Analyse is disabled in backend configuration.")
         result.warnings.extend(free_result.warnings[:2])
         return result
-    if not settings.hf_token:
-        result = _disabled_result(validation, "Paid Deep Analyse is not configured because HF_TOKEN is missing.")
+    if not _hf_token():
+        result = _disabled_result(validation, "Paid Deep Analyse is not configured because no Hugging Face token is available.")
         result.warnings.extend(free_result.warnings[:2])
         return result
     if _budget_remaining() < settings.hf_cost_per_deep_scan_usd:

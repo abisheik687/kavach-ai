@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     hf_endpoint_name: str | None = None
     hf_endpoint_namespace: str | None = None
     hf_endpoint_url: str | None = None
+    hf_deep_image_model: str = "dima806/deepfake_vs_real_image_detection"
+    hf_deep_audio_model: str = "MelodyMachine/Deepfake-audio-detection-V2"
+    hf_deep_video_model: str = "muneeb1812/videomae-base-fake-video-classification"
     hf_auto_scale_to_zero: bool = True
     hf_deep_cache_ttl_seconds: int = 48 * 60 * 60
 
