@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, AudioLines, Film, Image as ImageIcon, ShieldCheck, Upload, Workflow } from 'lucide-react';
+import { ArrowLeft, AudioLines, Coins, Film, Image as ImageIcon, ShieldCheck, Upload, Workflow } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import DropZone from '../components/DropZone.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
@@ -34,20 +34,20 @@ function Analyse({ analysis }) {
     event.target.value = '';
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (mode = 'free') => {
     if (!dropzone.file) {
       dropzone.setError('Choose a supported file before starting analysis.');
       return;
     }
     try {
-      await analysis.analyseFile(dropzone.file, dropzone.preview);
+      await analysis.analyseFile(dropzone.file, dropzone.preview, mode);
       navigate('/results');
     } catch {
       // Error state is already handled by the hook.
     }
   };
 
-  const busy = analysis.status === 'uploading' || analysis.status === 'analysing';
+  const busy = !['idle', 'done', 'error'].includes(analysis.status);
 
   return (
     <div className="scan-shell px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
@@ -117,7 +117,7 @@ function Analyse({ analysis }) {
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                   <button
                     type="button"
-                    onClick={onSubmit}
+                    onClick={() => onSubmit('free')}
                     className="action-secondary label-font rounded-full px-4 py-2.5 text-sm font-semibold transition"
                   >
                     {analysis.error.retryLabel}
@@ -133,11 +133,24 @@ function Analyse({ analysis }) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={onSubmit}
+                onClick={() => onSubmit('free')}
                 className="action-primary heading-font inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Upload size={15} />
-                {busy ? 'Analysing…' : 'Analyse file'}
+                {busy ? 'Analysing...' : 'Free Analyse'}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onSubmit('paid')}
+                className="action-secondary heading-font inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40"
+                title="Runs only when clicked and may use configured Hugging Face credits."
+              >
+                <Coins size={15} />
+                {busy ? 'Deep scan pending...' : 'Paid Deep Analyse'}
+                <span className="label-font text-[10px] uppercase tracking-widest" style={{ color: '#fbbf24' }}>
+                  Uses HF credits
+                </span>
               </button>
               <button
                 type="button"

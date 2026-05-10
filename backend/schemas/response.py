@@ -52,3 +52,4 @@ class AnalysisResult(BaseModel):
     processing_time_ms: int = 0
     warnings: list[str] = Field(default_factory=list)
     model_versions: dict[str, str] = Field(default_factory=dict)
+    analysis_source: str = 'free-local'

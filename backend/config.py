@@ -55,7 +55,18 @@ class Settings(BaseSettings):
     hf_inference_mode: str = "local_only"
     hf_weekly_budget_usd: float = 0.0
     block_hf_credit_usage: bool = True
+    hf_token: str | None = None
+    hf_deep_analysis_enabled: bool = False
+    hf_budget_limit_usd: float = 25.0
+    hf_cost_per_deep_scan_usd: float = 0.20
+    hf_deep_mode: str = "endpoint"
+    hf_endpoint_name: str | None = None
+    hf_endpoint_namespace: str | None = None
+    hf_endpoint_url: str | None = None
+    hf_auto_scale_to_zero: bool = True
+    hf_deep_cache_ttl_seconds: int = 48 * 60 * 60
 
+    detection_profile: str = "review"
     default_image_threshold: float = 0.35
     default_audio_threshold: float = 0.52
     disagreement_threshold: float = 0.4

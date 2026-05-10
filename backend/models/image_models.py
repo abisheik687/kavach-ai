@@ -400,6 +400,11 @@ def create_fallback_scorer(slot_key: str) -> Callable[[Image.Image], float]:
             calibrated = _calibrated_local_probability(image)
             if calibrated is None:
                 return heuristic
+            if settings.detection_profile.strip().lower() == 'review':
+                blended = (0.65 * heuristic) + (0.35 * calibrated)
+                if max(heuristic, calibrated) >= 0.78:
+                    blended = max(blended, 0.92 * max(heuristic, calibrated))
+                return clamp(blended)
             return clamp(max(heuristic, calibrated))
         return infer
 

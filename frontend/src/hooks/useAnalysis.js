@@ -69,7 +69,7 @@ export function useAnalysis() {
     setAsset(null);
   };
 
-  const analyseFile = async (file, preview) => {
+  const analyseFile = async (file, preview, mode = 'free') => {
     if (assetUrlRef.current) {
       URL.revokeObjectURL(assetUrlRef.current);
     }
@@ -96,7 +96,8 @@ export function useAnalysis() {
     let intervalId = null;
 
     try {
-      const response = await client.post('/analyse', formData, {
+      const endpoint = mode === 'paid' ? '/analyse/deep' : '/analyse';
+      const response = await client.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (event) => {
           if (!event.total) return;
@@ -106,7 +107,16 @@ export function useAnalysis() {
             setStatus('analysing');
             if (!intervalId) {
               intervalId = window.setInterval(() => {
-                setProgress((current) => (current < 99 ? current + 1 : current));
+                setProgress((current) => {
+                  const next = current < 99 ? current + 1 : current;
+                  if (mode === 'paid') {
+                    if (next >= 94 && next < 96) setStatus('waking');
+                    if (next >= 96 && next < 98) setStatus('deep_scanning');
+                    if (next >= 98 && next < 99) setStatus('saving_paid');
+                    if (next >= 99) setStatus('standby');
+                  }
+                  return next;
+                });
               }, 400);
             }
           }

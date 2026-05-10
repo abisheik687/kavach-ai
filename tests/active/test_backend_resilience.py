@@ -19,6 +19,7 @@ if str(BACKEND_DIR) not in sys.path:
 from config import settings
 from main import app
 from pipelines import audio_pipeline, image_pipeline, video_pipeline
+from pipelines import deep_analysis
 from utils.file_utils import AppError
 
 
@@ -148,3 +149,80 @@ def test_video_all_frame_failures_return_safe_fallback_result(
     assert payload['verdict'] == 'UNCERTAIN'
     assert payload['video_frame_scores'] == []
     assert any('safe fallback' in warning.lower() for warning in payload['warnings'])
+
+
+def test_paid_deep_cache_reuses_result_without_second_hf_call(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    media_path = tmp_path / 'sample.jpg'
+    media_path.write_bytes(_build_jpeg_bytes())
+    validation = type('Validation', (), {'file_type': 'image'})()
+
+    free_result = deep_analysis.AnalysisResult(
+        type='image',
+        prediction='real',
+        confidence=90.0,
+        file_type='image',
+        verdict='REAL',
+        overall_confidence=0.9,
+        fake_probability=0.1,
+    )
+    registry = type('Registry', (), {'model_versions': {}})()
+    calls = {'count': 0}
+
+    async def fake_paid_scan(_file_path, _validation):
+        calls['count'] += 1
+        return 0.2, 'mock-hf'
+
+    monkeypatch.setattr(deep_analysis, 'DEEP_CACHE_DIR', tmp_path / 'cache')
+    monkeypatch.setattr(deep_analysis, 'DEEP_LEDGER_PATH', tmp_path / 'ledger.json')
+    monkeypatch.setattr(settings, 'hf_deep_analysis_enabled', True)
+    monkeypatch.setattr(settings, 'hf_token', 'test-token')
+    monkeypatch.setattr(settings, 'hf_budget_limit_usd', 25.0)
+    monkeypatch.setattr(settings, 'hf_cost_per_deep_scan_usd', 0.2)
+    monkeypatch.setattr(deep_analysis, '_run_paid_hf_scan', fake_paid_scan)
+
+    import asyncio
+    first = asyncio.run(deep_analysis.analyse_deep_file(media_path, registry, validation, free_result))
+    second = asyncio.run(deep_analysis.analyse_deep_file(media_path, registry, validation, free_result))
+
+    assert calls['count'] == 1
+    assert first.analysis_source == 'paid-hf'
+    assert second.analysis_source == 'paid-cache'
+
+
+def test_paid_deep_budget_cap_blocks_remote_call(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    media_path = tmp_path / 'sample.jpg'
+    media_path.write_bytes(_build_jpeg_bytes())
+    validation = type('Validation', (), {'file_type': 'image'})()
+    registry = type('Registry', (), {'model_versions': {}})()
+    free_result = deep_analysis.AnalysisResult(
+        type='image',
+        prediction='real',
+        confidence=90.0,
+        file_type='image',
+        verdict='REAL',
+        overall_confidence=0.9,
+        fake_probability=0.1,
+    )
+
+    async def fail_if_called(_file_path, _validation):
+        raise AssertionError('remote scan should not run after budget cap')
+
+    monkeypatch.setattr(deep_analysis, 'DEEP_CACHE_DIR', tmp_path / 'cache')
+    monkeypatch.setattr(deep_analysis, 'DEEP_LEDGER_PATH', tmp_path / 'ledger.json')
+    monkeypatch.setattr(settings, 'hf_deep_analysis_enabled', True)
+    monkeypatch.setattr(settings, 'hf_token', 'test-token')
+    monkeypatch.setattr(settings, 'hf_budget_limit_usd', 0.1)
+    monkeypatch.setattr(settings, 'hf_cost_per_deep_scan_usd', 0.2)
+    monkeypatch.setattr(deep_analysis, '_run_paid_hf_scan', fail_if_called)
+
+    import asyncio
+    result = asyncio.run(deep_analysis.analyse_deep_file(media_path, registry, validation, free_result))
+
+    assert result.analysis_source == 'paid-disabled'
+    assert any('budget' in warning.lower() for warning in result.warnings)

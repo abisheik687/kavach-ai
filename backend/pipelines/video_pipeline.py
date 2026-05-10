@@ -265,7 +265,7 @@ async def analyse_video_file(file_path: Path, registry: ModelRegistry, validatio
             temporal_probability = clamp(temporal_probability)
             fake_probability = clamp((0.6 * fake_probability) + (0.4 * temporal_probability))
             confidence = max(fake_probability, 1.0 - fake_probability)
-            verdict = 'FAKE' if fake_probability > settings.default_image_threshold else 'REAL'
+            verdict, confidence = aggregate_video_scores([fake_probability])
             averaged_model_scores.append(
                 ModelScore(
                     model='VideoMAE Temporal',

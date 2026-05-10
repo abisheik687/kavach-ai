@@ -109,6 +109,19 @@ def test_analyse_audio_returns_audio_result(client: TestClient) -> None:
     assert isinstance(payload['audio_result']['waveform'], list)
 
 
+def test_paid_deep_analyse_returns_graceful_disabled_result_without_hf_token(client: TestClient) -> None:
+    response = client.post(
+        '/analyse/deep',
+        files={'file': ('sample.jpg', _build_jpeg_bytes(), 'image/jpeg')},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload['type'] == 'image'
+    assert payload['prediction'] in {'real', 'fake', 'uncertain'}
+    assert payload['analysis_source'] in {'paid-disabled', 'paid-fallback-free-local', 'paid-cache'}
+    assert any('paid' in warning.lower() for warning in payload['warnings'])
+
+
 def test_invalid_file_type_returns_documented_error_shape(client: TestClient) -> None:
     response = client.post(
         '/analyse',

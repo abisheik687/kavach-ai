@@ -15,12 +15,14 @@ from scipy import signal
 
 try:
     from ..config import settings
+    from ..models.ensemble import classify_probability
     from ..models.loader import ModelRegistry
     from ..schemas.response import AnalysisResult, AudioResult
     from ..utils.file_utils import AppError, clamp
     from ..utils.runtime import run_inference
 except ImportError:
     from config import settings
+    from models.ensemble import classify_probability
     from models.loader import ModelRegistry
     from schemas.response import AnalysisResult, AudioResult
     from utils.file_utils import AppError, clamp
@@ -90,8 +92,7 @@ async def analyse_audio_file(file_path: Path, registry: ModelRegistry, validatio
         fake_probability = 0.5
 
     fake_probability = clamp(fake_probability)
-    verdict = 'FAKE' if fake_probability > settings.default_audio_threshold else 'REAL'
-    confidence = max(fake_probability, 1.0 - fake_probability)
+    verdict, confidence = classify_probability(fake_probability, 'audio')
 
     return AnalysisResult(
         type=validation.file_type,

@@ -4,11 +4,15 @@ const LABELS = {
   idle:      'Awaiting evidence',
   uploading: 'Uploading file securely',
   analysing: 'Running ensemble analysis',
+  waking: 'Waking HF model',
+  deep_scanning: 'Running deep scan',
+  saving_paid: 'Saving paid result',
+  standby: 'Returning to standby',
   done:      'Analysis complete',
   error:     'Analysis halted',
 };
 
-const STAGES = ['idle', 'uploading', 'analysing', 'done'];
+const STAGES = ['idle', 'uploading', 'analysing', 'waking', 'deep_scanning', 'saving_paid', 'standby', 'done'];
 
 /**
  * @param {{ status: string, progress: number }} props
@@ -16,7 +20,7 @@ const STAGES = ['idle', 'uploading', 'analysing', 'done'];
 function ProgressBar({ status, progress }) {
   return (
     <div className="panel relative overflow-hidden rounded-2xl p-5 sm:p-6">
-      {status === 'analysing' ? (
+      {['analysing', 'waking', 'deep_scanning', 'saving_paid', 'standby'].includes(status) ? (
         <motion.div
           className="scanline"
           initial={{ x: '-100%' }}

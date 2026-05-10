@@ -127,9 +127,11 @@ function Results({ analysis }) {
   const overallConfidence = Number.isFinite(Number(result.overall_confidence)) ? Number(result.overall_confidence) : Math.max(fakeProbability, 1 - fakeProbability);
   const processingTimeMs = Number.isFinite(Number(result.processing_time_ms)) ? Number(result.processing_time_ms) : 0;
   const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+  const sourceLabel = result.analysis_source || 'free-local';
 
   const metaCards = [
     { label: 'File type',        value: result.file_type,                              icon: result.file_type === 'video' ? FileVideo2 : result.file_type === 'audio' ? AudioLines : ImageIcon, color: 'var(--indigo)' },
+    { label: 'Analysis source',   value: sourceLabel,                                  icon: Shield,   color: sourceLabel.includes('paid') ? '#fbbf24' : '#34d399' },
     { label: 'Fake probability', value: `${(fakeProbability * 100).toFixed(1)}%`,      icon: Shield,   color: fakeProbability >= 0.45 ? '#f87171' : '#34d399' },
     { label: 'Confidence',       value: `${(overallConfidence * 100).toFixed(1)}%`,    icon: Shield,   color: '#f5c842' },
     { label: 'Processing time',  value: `${(processingTimeMs / 1000).toFixed(2)}s`,    icon: Clock3,   color: '#34d399' },

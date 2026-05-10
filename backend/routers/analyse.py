@@ -14,6 +14,7 @@ try:
     from ..config import settings
     from ..models.loader import get_model_registry
     from ..pipelines.audio_pipeline import analyse_audio_file
+    from ..pipelines.deep_analysis import analyse_deep_file
     from ..pipelines.image_pipeline import analyse_image_file
     from ..pipelines.video_pipeline import analyse_video_file
     from ..schemas.request import UploadValidationInfo, validate_upload
@@ -24,6 +25,7 @@ except ImportError:
     from config import settings
     from models.loader import get_model_registry
     from pipelines.audio_pipeline import analyse_audio_file
+    from pipelines.deep_analysis import analyse_deep_file
     from pipelines.image_pipeline import analyse_image_file
     from pipelines.video_pipeline import analyse_video_file
     from schemas.request import UploadValidationInfo, validate_upload
@@ -43,7 +45,7 @@ def _standardize_result(result: AnalysisResult, processing_time_ms: int, model_v
     result.confidence = round((result.overall_confidence or 0.0) * 100.0, 2)
     result.processing_time_ms = processing_time_ms
     result.processing_time = f'{processing_time_ms} ms'
-    result.model_versions = model_versions
+    result.model_versions = {**model_versions, **result.model_versions}
     return result
 
 
@@ -93,30 +95,52 @@ async def analyse(
 
     registry = get_model_registry()
 
+    result = await _analyse_local(temp_path, registry, validation, background_tasks)
+    result.analysis_source = 'free-local'
+
+    processing_time_ms = int((time.perf_counter() - started_at) * 1000)
+    return _standardize_result(result, processing_time_ms, registry.model_versions)
+
+
+async def _analyse_local(temp_path, registry, validation: UploadValidationInfo, background_tasks: BackgroundTasks) -> AnalysisResult:
     if validation.file_type == 'image':
-        result = await _run_demo_safe(
+        return await _run_demo_safe(
             analyse_image_file(temp_path, registry, validation),
             timeout_seconds=settings.image_timeout_seconds,
             stage='Image analysis',
             validation=validation,
             model_versions=registry.model_versions,
         )
-    elif validation.file_type == 'video':
-        result = await _run_demo_safe(
+    if validation.file_type == 'video':
+        return await _run_demo_safe(
             analyse_video_file(temp_path, registry, validation, background_tasks),
             timeout_seconds=settings.video_timeout_seconds,
             stage='Video analysis',
             validation=validation,
             model_versions=registry.model_versions,
         )
-    else:
-        result = await _run_demo_safe(
-            analyse_audio_file(temp_path, registry, validation),
-            timeout_seconds=settings.audio_timeout_seconds,
-            stage='Audio analysis',
-            validation=validation,
-            model_versions=registry.model_versions,
-        )
+    return await _run_demo_safe(
+        analyse_audio_file(temp_path, registry, validation),
+        timeout_seconds=settings.audio_timeout_seconds,
+        stage='Audio analysis',
+        validation=validation,
+        model_versions=registry.model_versions,
+    )
+
+
+@router.post('/analyse/deep', response_model=AnalysisResult)
+async def analyse_deep(
+    background_tasks: BackgroundTasks,
+    validation: UploadValidationInfo = Depends(validate_upload),
+    file: UploadFile = File(...),
+) -> AnalysisResult:
+    started_at = time.perf_counter()
+    temp_path = await persist_upload_to_temp(file, validation)
+    background_tasks.add_task(cleanup_path, temp_path)
+
+    registry = get_model_registry()
+    free_result = await _analyse_local(temp_path, registry, validation, background_tasks)
+    result = await analyse_deep_file(temp_path, registry, validation, free_result)
 
     processing_time_ms = int((time.perf_counter() - started_at) * 1000)
     return _standardize_result(result, processing_time_ms, registry.model_versions)
