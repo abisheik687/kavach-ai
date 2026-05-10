@@ -51,18 +51,28 @@ class Settings(BaseSettings):
 
     allow_fallback_models: bool = False
     enable_remote_model_downloads: bool = False
+    hf_inference_mode: str = "local_only"
+    hf_weekly_budget_usd: float = 0.0
+    block_hf_credit_usage: bool = True
 
-    default_image_threshold: float = 0.52
+    default_image_threshold: float = 0.35
     default_audio_threshold: float = 0.52
     disagreement_threshold: float = 0.4
+    tta_enabled: bool = False
 
     model_vit_repo: str = "prithivMLmods/Deep-Fake-Detector-Model"
     model_efficientnet_repo: str = "Wvolf/EfficientNet_Deepfake"
     model_xception_repo: str = "not-lain/xception-deepfake"
     model_convnext_repo: str = "facebook/convnext-base-224"
+    model_vit_label_order: str = "fake_first"
+    model_efficientnet_label_order: str = "real_first"
+    model_xception_label_order: str = "real_first"
+    model_convnext_label_order: str = "real_first"
+    model_label_order_check_image: str | None = None
     model_audio_repo: str = "mo-thecreator/deepfake-audio-detector"
     model_video_repo: str = "muneeb1812/videomae-base-fake-video-classification"
     model_video_local_path: str | None = None
+    local_image_calibrator_path: str | None = "../models/local_image_calibrator.json"
 
     model_image_artifact_manifest: str | None = None
     model_audio_artifact_manifest: str | None = None

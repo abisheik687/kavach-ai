@@ -23,6 +23,7 @@ SUPPORTED_TYPES: dict[str, str] = {
     'image/jpeg': 'image',
     'image/png': 'image',
     'image/webp': 'image',
+    'image/gif': 'image',
     'video/mp4': 'video',
     'video/webm': 'video',
     'audio/wav': 'audio',
@@ -57,7 +58,7 @@ async def validate_upload(file: UploadFile = File(...)) -> UploadValidationInfo:
     if effective_type not in SUPPORTED_TYPES:
         raise AppError(
             422,
-            'Unsupported file type. Allowed: JPEG, PNG, WEBP, MP4, WEBM, WAV, MP3, OGG.',
+            'Unsupported file type. Allowed: JPEG, PNG, WEBP, GIF, MP4, WEBM, WAV, MP3, OGG.',
             'INVALID_FILE_TYPE',
         )
 

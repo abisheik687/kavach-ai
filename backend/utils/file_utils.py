@@ -35,6 +35,8 @@ def sniff_file_type(content: bytes) -> str | None:
         return 'image/jpeg'
     if header.startswith(b'\x89PNG\r\n\x1a\n'):
         return 'image/png'
+    if header.startswith(b'GIF87a') or header.startswith(b'GIF89a'):
+        return 'image/gif'
     if header[:4] == b'RIFF' and header[8:12] == b'WEBP':
         return 'image/webp'
     if header[:4] == b'RIFF' and header[8:12] == b'WAVE':

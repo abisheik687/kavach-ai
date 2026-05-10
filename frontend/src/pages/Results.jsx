@@ -123,10 +123,16 @@ function Results({ analysis }) {
     );
   }
 
+  const fakeProbability = Number.isFinite(Number(result.fake_probability)) ? Number(result.fake_probability) : 0;
+  const overallConfidence = Number.isFinite(Number(result.overall_confidence)) ? Number(result.overall_confidence) : Math.max(fakeProbability, 1 - fakeProbability);
+  const processingTimeMs = Number.isFinite(Number(result.processing_time_ms)) ? Number(result.processing_time_ms) : 0;
+  const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+
   const metaCards = [
     { label: 'File type',        value: result.file_type,                              icon: result.file_type === 'video' ? FileVideo2 : result.file_type === 'audio' ? AudioLines : ImageIcon, color: 'var(--indigo)' },
-    { label: 'Confidence',       value: `${(result.overall_confidence * 100).toFixed(1)}%`, icon: Shield,   color: '#f5c842' },
-    { label: 'Processing time',  value: `${(result.processing_time_ms / 1000).toFixed(2)}s`, icon: Clock3,   color: '#34d399' },
+    { label: 'Fake probability', value: `${(fakeProbability * 100).toFixed(1)}%`,      icon: Shield,   color: fakeProbability >= 0.45 ? '#f87171' : '#34d399' },
+    { label: 'Confidence',       value: `${(overallConfidence * 100).toFixed(1)}%`,    icon: Shield,   color: '#f5c842' },
+    { label: 'Processing time',  value: `${(processingTimeMs / 1000).toFixed(2)}s`,    icon: Clock3,   color: '#34d399' },
   ];
 
   return (
@@ -166,14 +172,14 @@ function Results({ analysis }) {
         </motion.div>
 
         {/* ── Verdict Banner ── */}
-        <VerdictBanner verdict={result.verdict} fakeProbability={result.fake_probability} />
+        <VerdictBanner verdict={result.verdict} fakeProbability={fakeProbability} />
 
         {/* ── Main Grid ── */}
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
 
           {/* Left: ring + preview */}
           <div className="space-y-5">
-            <ProbabilityRing probability={result.fake_probability} />
+            <ProbabilityRing probability={fakeProbability} />
             <AssetPreviewCard asset={asset} />
           </div>
 
@@ -181,7 +187,7 @@ function Results({ analysis }) {
           <div className="space-y-5">
 
             {/* Meta cards */}
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {metaCards.map(({ label, value, icon: Icon, color }) => (
                 <div key={label} className="signal-card rounded-xl p-4">
                   <div
@@ -195,6 +201,17 @@ function Results({ analysis }) {
                 </div>
               ))}
             </div>
+
+            {warnings.length ? (
+              <div className="rounded-2xl border px-5 py-4" style={{ borderColor: 'rgba(251,191,36,0.28)', background: 'rgba(251,191,36,0.08)' }}>
+                <p className="section-kicker" style={{ fontSize: '0.65rem', color: '#fbbf24' }}>Runtime warnings</p>
+                <div className="mt-3 space-y-2">
+                  {warnings.slice(0, 4).map((warning) => (
+                    <p key={warning} className="label-font text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{warning}</p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
 
 

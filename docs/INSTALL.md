@@ -1,79 +1,137 @@
-# 🏗️ Production Deployment & Cluster Orchestration
+# Installation and Local Run Guide
 
-<<<<<<< HEAD
-This guide provides the definitive protocol for deploying **KAVACH-AI v2.0** in both development and high-availability production environments.
-=======
-This guide provides the definitive protocol for deploying **Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques v2.0** in both development and high-availability production environments.
->>>>>>> 7df14d1 (UI enhanced)
+This guide describes the current active KAVACH-AI web application.
 
-## 1. Minimal Hardware Requirements
-To run the Hyper-Modal Ensemble at peak performance, we recommend:
-- **CPU**: 8+ Cores (AMD Threadripper or Intel Scalable preferred).
-- **RAM**: 32GB+ (For local model caching).
-- **GPU**: NVIDIA RTX 3090/4090 or A100 (24GB+ VRAM) for parallel multi-model inference.
-- **Storage**: 500GB NVMe SSD (High I/O for Kafka/MinIO).
+## Requirements
 
-## 2. Theoretical Deployment Architecture
-<<<<<<< HEAD
-KAVACH-AI utilizes a **Decentralized Forensic Hub** model where nodes can be geographically distributed but logically centralized via the **Mission Control Agency**.
-=======
-Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques utilizes a **Decentralized Forensic Hub** model where nodes can be geographically distributed but logically centralized via the **Mission Control Agency**.
->>>>>>> 7df14d1 (UI enhanced)
+- Python 3.10+
+- Node.js 20+
+- npm
+- ffmpeg optional, used for video audio extraction
 
----
+## Local Backend
 
-## 3. Deployment via Docker Cluster (The "Iron Dome")
+From the project root:
 
-### Quick Initialization
-```bash
-# 1. Clone & Enter Hub
-<<<<<<< HEAD
-git clone https://github.com/abisheik687/kavach-ai.git && cd kavach-ai
-=======
-git clone https://github.com/abisheik687/Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques.git && cd Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques
->>>>>>> 7df14d1 (UI enhanced)
-
-# 2. Master Bootstrap
-# This script handles Venv, Dependencies, and Directory Signatures
-bash setup.sh
-
-# 3. Launch Cluster
-docker compose up -d --build
+```powershell
+cd backend
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-### Cluster Service Topology
-| Service | Role | Port | Persistence |
-| :--- | :--- | :--- | :--- |
-| **Kavach Gateway** | FastAPI Entry Point | 8000 | N/A |
-| **Forensic Worker** | Celery/Torch Inference | N/A | `evidence/` |
-| **Mission Control** | Dashboard Frontend | 3000 | N/A |
-| **Agency Broker** | Redis / Kafka | 6379/9092 | `redis_data` |
-| **Intelligence DB** | PostgreSQL | 5432 | `pg_data` |
+Backend URL:
 
----
-
-## 4. Scaling for Enterprise (Kubernetes)
-For national-scale security, deploy the provided K8s manifests:
-
-```bash
-kubectl apply -f infra/k8s/namespace.yaml
-kubectl apply -f infra/k8s/configmap.yaml
-kubectl apply -f infra/k8s/deployment.yaml
+```text
+http://127.0.0.1:8000
 ```
 
-### Horizontal Pod Autoscaling (HPA)
-The system automatically scales forensic pods based on the **Prometheus** metrics exported by the backend, ensuring zero-latency detection during mass disinformation events.
+Swagger API docs:
 
----
+```text
+http://127.0.0.1:8000/docs
+```
 
-## 5. Troubleshooting
-- **Metric Lag**: Check `Grafana` dashboard at `http://localhost:3001` to identify bottleneck services.
-- **Inference Latency**: Ensure `nvidia-container-toolkit` is correctly configured if using the `--profile gpu` flag.
-- **Storage Overflow**: Adjust data retention policies in `backend/config.py`.
+Health check:
 
----
-<<<<<<< HEAD
-*Operational Document — KAVACH-AI Mission Control*
-=======
-*Operational Document — Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Mission Control*
->>>>>>> 7df14d1 (UI enhanced)
+```powershell
+curl.exe http://127.0.0.1:8000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "models_loaded": 5
+}
+```
+
+## Local Frontend
+
+Open a second terminal:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend URL:
+
+```text
+http://127.0.0.1:5173
+```
+
+## Environment
+
+The backend reads settings from:
+
+```text
+backend/.env
+```
+
+Current free local-only inference settings:
+
+```text
+ENABLE_REMOTE_MODEL_DOWNLOADS=false
+HF_INFERENCE_MODE=local_only
+HF_WEEKLY_BUDGET_USD=0
+BLOCK_HF_CREDIT_USAGE=true
+DEFAULT_IMAGE_THRESHOLD=0.35
+```
+
+These settings prevent paid Hugging Face credit usage.
+
+## Docker Compose
+
+From the project root:
+
+```powershell
+docker compose up --build
+```
+
+Docker URLs:
+
+```text
+Frontend: http://localhost:4173
+Backend:  http://localhost:8000
+Docs:     http://localhost:8000/docs
+```
+
+## Supported Uploads
+
+| Media | Formats | Limit |
+|---|---|---|
+| Image | JPEG, PNG, WEBP, GIF | 20 MB |
+| Video | MP4, WEBM | 100 MB |
+| Audio | WAV, MP3, OGG | 20 MB |
+
+## Troubleshooting
+
+### Backend does not start
+
+Check missing Python packages:
+
+```powershell
+python -m pip install -r backend/requirements.txt
+```
+
+### Frontend cannot reach backend
+
+Check `frontend/.env`:
+
+```text
+VITE_API_URL=http://localhost:8000
+```
+
+### Video audio extraction does not work
+
+Install ffmpeg and make sure it is on PATH, or set:
+
+```text
+FFMPEG_BINARY=C:\path\to\ffmpeg.exe
+```
+
+### All outputs look too fake-biased
+
+The current threshold is intentionally tuned to reduce fake-as-real mistakes for demonstration. Raise `DEFAULT_IMAGE_THRESHOLD` from `0.35` to `0.45` or `0.50` if you want fewer false positives.

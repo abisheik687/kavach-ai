@@ -3,11 +3,7 @@ Internal trace:
 - Wrong before: startup was blocked by cwd-sensitive imports, an incorrect model count, and strict dev boot behavior when no manifests were configured.
 - Fixed now: the loader imports cleanly in both modes, reports the correct count, and auto-enables dev fallbacks when no trained manifests exist.
 
-# <<<<<<< HEAD
-KAVACH-AI Model Loader
-=======
 Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques Model Loader
->>>>>>> 7df14d1 (UI enhanced)
 =======================
 Loads all models at startup via FastAPI lifespan context.
 
@@ -59,6 +55,7 @@ class LoadedImageModel:
     infer: Callable
     mode: str
     warning: str | None = None
+    threshold: float | None = None
 
 
 @dataclass
@@ -98,6 +95,12 @@ def _allow_fallback() -> bool:
 
 
 def _can_reach_huggingface() -> bool:
+    if settings.block_hf_credit_usage:
+        return False
+    if settings.hf_inference_mode.strip().lower() != 'remote':
+        return False
+    if settings.hf_weekly_budget_usd <= 0:
+        return False
     if not settings.enable_remote_model_downloads:
         return False
     try:
@@ -149,26 +152,32 @@ async def _load_models() -> None:
 
     if image_manifest is not None:
         logger.info('loading_image_artifact', extra={'path': str(image_manifest)})
-        infer, architecture = load_image_artifact(str(image_manifest))
+        infer, architecture, threshold = load_image_artifact(str(image_manifest))
         slot = ImageModelSlot(
             key='trained_image',
             label=f'Trained-{architecture}',
             weight=1.0,
             repo_id=str(image_manifest),
+            label_order='real_first',
             loader=lambda: (infer, 'trained-local'),
         )
-        _registry.image_models.append(LoadedImageModel(slot=slot, infer=infer, mode='trained-local'))
+        _registry.image_models.append(
+            LoadedImageModel(slot=slot, infer=infer, mode='trained-local', threshold=threshold)
+        )
         _registry.model_versions[slot.label] = architecture
-        logger.info('image_model_loaded', extra={'architecture': architecture, 'mode': 'trained-local'})
+        logger.info(
+            'image_model_loaded',
+            extra={'architecture': architecture, 'mode': 'trained-local', 'threshold': threshold},
+        )
     else:
         # Permissive fallback path (allow_fallback_models=True)
         remote_available = _can_reach_huggingface()
         if not remote_available:
-            _registry.warnings.append('Remote model hub unavailable; using forensic fallback scorers')
+            _registry.warnings.append('HF remote inference disabled; using free local forensic fallback scorers')
         for slot in create_image_slots():
             if not remote_available:
                 infer = create_fallback_scorer(slot.key)
-                warning = f'{slot.label}: using forensic fallback scorer (no remote access)'
+                warning = f'{slot.label}: using local forensic fallback scorer (HF disabled, no credit usage)'
                 _registry.image_models.append(LoadedImageModel(slot=slot, infer=infer, mode='fallback', warning=warning))
                 _registry.warnings.append(warning)
                 _registry.model_versions[slot.label] = f'fallback:{slot.key}'

@@ -10,6 +10,7 @@ const SUPPORTED = {
   'image/jpeg': { kind: 'image', maxBytes: 20 * 1024 * 1024 },
   'image/png': { kind: 'image', maxBytes: 20 * 1024 * 1024 },
   'image/webp': { kind: 'image', maxBytes: 20 * 1024 * 1024 },
+  'image/gif': { kind: 'image', maxBytes: 20 * 1024 * 1024 },
   'video/mp4': { kind: 'video', maxBytes: 100 * 1024 * 1024 },
   'video/webm': { kind: 'video', maxBytes: 100 * 1024 * 1024 },
   'audio/wav': { kind: 'audio', maxBytes: 20 * 1024 * 1024 },
@@ -82,7 +83,7 @@ export function useDropZone() {
 
     const config = SUPPORTED[nextFile.type];
     if (!config) {
-      setError('Unsupported file type. Use JPEG, PNG, WEBP, MP4, WEBM, WAV, MP3, or OGG.');
+      setError('Unsupported file type. Use JPEG, PNG, WEBP, GIF, MP4, WEBM, WAV, MP3, or OGG.');
       return;
     }
 

@@ -97,7 +97,7 @@ function DropZone({ dropzone, disabled, onBrowse }) {
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {['JPEG / PNG / WEBP', 'MP4 / WEBM', 'WAV / MP3 / OGG'].map((fmt) => (
+                  {['JPEG / PNG / WEBP / GIF', 'MP4 / WEBM', 'WAV / MP3 / OGG'].map((fmt) => (
                     <span key={fmt} className="media-badge label-font rounded-full px-3 py-1.5 text-xs uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{fmt}</span>
                   ))}
                 </div>

@@ -1,230 +1,164 @@
-<<<<<<< HEAD
-# KAVACH-AI REST API Reference
-=======
-# Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques REST API Reference
->>>>>>> 7df14d1 (UI enhanced)
+# KAVACH-AI API Reference
 
-**Base URL**: `http://localhost:8000`  
-**Version**: 2.0.0  
-**No authentication required** for local deployment.
+Base URL:
 
----
+```text
+http://127.0.0.1:8000
+```
 
-## Endpoints
+Interactive documentation:
 
-### `GET /`
+```text
+http://127.0.0.1:8000/docs
+```
 
-Returns basic application info.
+## Runtime Mode
 
-**Response**
+The current college-demo configuration uses free local inference only.
+
+```text
+ENABLE_REMOTE_MODEL_DOWNLOADS=false
+HF_INFERENCE_MODE=local_only
+HF_WEEKLY_BUDGET_USD=0
+BLOCK_HF_CREDIT_USAGE=true
+```
+
+This prevents accidental Hugging Face credit usage.
+
+## GET /
+
+Returns application metadata.
+
+Example:
+
+```powershell
+curl.exe http://127.0.0.1:8000/
+```
+
+Response:
+
 ```json
 {
-<<<<<<< HEAD
   "name": "KAVACH-AI",
-=======
-  "name": "Multimodal Deepfake Detection System Using Advanced Machine Learning Techniques",
->>>>>>> 7df14d1 (UI enhanced)
   "version": "2.0.0",
   "docs": "/docs"
 }
 ```
 
----
+## GET /health
 
-### `GET /health`
+Returns backend health and loaded model count.
 
-System health check. Returns model loading status and warnings.
+Example:
 
-**Response**
+```powershell
+curl.exe http://127.0.0.1:8000/health
+```
+
+Response:
+
 ```json
 {
   "status": "ok",
-  "model_versions": {
-    "Trained-efficientnet_b4": "efficientnet_b4",
-    "audio": "audio_spectrogram_efficientnet_b0",
-    "video": "r3d_18"
-  },
-  "warnings": []
+  "models_loaded": 5
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `status` | string | `"ok"` or `"degraded"` |
-| `model_versions` | object | Map of model name → architecture/version |
-| `warnings` | array | List of model loading warnings (empty when all trained models loaded) |
+## POST /analyse
 
----
+Analyzes one uploaded image, video, or audio file.
 
-### `POST /analyse`
+Request:
 
-Upload a file for deepfake detection. Accepts image, audio, or video.
+```text
+Content-Type: multipart/form-data
+field: file
+```
 
-**Request**
+Supported formats:
 
-`Content-Type: multipart/form-data`
+| Media | Formats | Max Size |
+|---|---|---|
+| Image | JPEG, PNG, WEBP, GIF | 20 MB |
+| Video | MP4, WEBM | 100 MB |
+| Audio | WAV, MP3, OGG | 20 MB |
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `file` | file | ✓ | The media file to analyse |
+Example image request:
 
-**Supported formats**
+```powershell
+curl.exe -X POST -F "file=@data/hard_examples/image/fake/00000_lowres.jpg" http://127.0.0.1:8000/analyse
+```
 
-| Type | Formats | Max Size |
-|------|---------|---------|
-| Image | JPEG, PNG, WEBP | 20 MB |
-| Audio | WAV, MP3, OGG, FLAC, M4A | 20 MB |
-| Video | MP4, WEBM, AVI, MOV, MKV | 100 MB |
-
-**Response**
+Example response:
 
 ```json
 {
   "type": "image",
   "prediction": "fake",
+  "confidence": 57.21,
+  "processing_time": "2328 ms",
+  "file_type": "image",
   "verdict": "FAKE",
-  "fake_probability": 0.8732,
-  "confidence": 87.32,
-  "overall_confidence": 0.8732,
-  "processing_time": "142 ms",
-  "processing_time_ms": 142,
+  "overall_confidence": 0.5721,
+  "fake_probability": 0.5721,
   "model_scores": [
     {
-      "model": "Trained-efficientnet_b4",
-      "fake_prob": 0.8732,
-      "weight": 1.0,
-      "mode": "trained-local"
+      "model": "ViT",
+      "fake_prob": 0.5721,
+      "weight": 0.3,
+      "mode": "fallback"
     }
   ],
-  "model_versions": {
-    "Trained-efficientnet_b4": "efficientnet_b4"
-  },
-  "warnings": [],
+  "video_frame_scores": [],
+  "video_frame_previews": [],
   "audio_result": null,
-  "video_frame_scores": null,
-  "video_frame_previews": null
-}
-```
-
-**For audio files**, `audio_result` is populated:
-
-```json
-{
-  "audio_result": {
-    "verdict": "REAL",
-    "fake_probability": 0.1234,
-    "waveform": [0.021, 0.018, 0.025, ...],
-    "mode": "trained-local",
-    "model": "audio_spectrogram_efficientnet_b0"
+  "processing_time_ms": 2328,
+  "warnings": [
+    "HF remote inference disabled; using free local forensic fallback scorers"
+  ],
+  "model_versions": {
+    "ViT": "fallback:vit",
+    "audio": "fallback:signal",
+    "video": "fallback:frame-aggregation"
   }
 }
 ```
 
-**For video files**, `video_frame_scores` and `video_frame_previews` are populated:
+## Response Field Meaning
+
+| Field | Meaning |
+|---|---|
+| `verdict` | Final uppercase label: `REAL`, `FAKE`, or `UNCERTAIN` |
+| `prediction` | Lowercase prediction for frontend compatibility |
+| `fake_probability` | Probability that media is fake, from 0 to 1 |
+| `overall_confidence` | Confidence in the final verdict, from 0 to 1 |
+| `confidence` | Same idea as percentage |
+| `model_scores` | Per-scorer or per-model fake probabilities |
+| `warnings` | Runtime notes such as fallback mode or skipped audio extraction |
+| `video_frame_scores` | Per-frame fake probability values for video |
+| `video_frame_previews` | Base64 thumbnails of sampled video frames |
+| `audio_result` | Audio-specific result object |
+
+## Error Format
+
+Errors use:
 
 ```json
 {
-  "video_frame_scores": [0.42, 0.51, 0.38, 0.79, 0.65],
-  "video_frame_previews": [
-    {
-      "index": 0,
-      "fake_probability": 0.42,
-      "image_base64": "data:image/jpeg;base64,..."
-    }
-  ]
-}
-```
-
-**Response fields**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | `"image"`, `"audio"`, or `"video"` |
-| `prediction` | string | `"real"`, `"fake"`, or `"uncertain"` (lowercase) |
-| `verdict` | string | `"REAL"`, `"FAKE"`, or `"UNCERTAIN"` (uppercase) |
-| `fake_probability` | float | Probability in [0, 1] that the file is fake |
-| `confidence` | float | Confidence score as a percentage (0–100) |
-| `overall_confidence` | float | Confidence score in [0, 1] |
-| `processing_time` | string | Human-readable processing time |
-| `processing_time_ms` | int | Processing time in milliseconds |
-| `model_scores` | array | Per-model scores (see ModelScore) |
-| `model_versions` | object | Map of model name → version/architecture |
-| `warnings` | array | Non-fatal warnings (e.g., audio extraction note) |
-| `audio_result` | object\|null | Audio analysis details (for audio/video) |
-| `video_frame_scores` | array\|null | Per-frame fake probability scores (for video) |
-| `video_frame_previews` | array\|null | Frame preview thumbnails as base64 (for video) |
-
----
-
-## Error Responses
-
-All errors return JSON with `error` and `code` fields:
-
-```json
-{
-  "error": "Human-readable error description",
+  "error": "Human-readable message",
   "code": "ERROR_CODE"
 }
 ```
 
-| HTTP Status | Code | Description |
-|-------------|------|-------------|
-| 422 | `UNSUPPORTED_FILE_TYPE` | File type not supported |
-| 422 | `FILE_TOO_LARGE` | File exceeds size limit |
+Common errors:
+
+| Status | Code | Meaning |
+|---|---|---|
+| 422 | `MISSING_FILE` | No uploaded file |
+| 422 | `EMPTY_FILE` | Uploaded file is empty |
+| 422 | `INVALID_FILE_TYPE` | Unsupported MIME type |
+| 413 | `FILE_TOO_LARGE` | File exceeds size limit |
 | 422 | `INVALID_IMAGE_FILE` | Image could not be decoded |
 | 422 | `INVALID_AUDIO_FILE` | Audio could not be decoded |
 | 422 | `INVALID_VIDEO_FILE` | Video could not be decoded |
-| 422 | `VIDEO_ANALYSIS_FAILED` | No frames could be analysed |
-| 408 | `TIMEOUT` | Analysis exceeded time limit |
-| 500 | `INTERNAL_ERROR` | Unexpected server error |
-
----
-
-## cURL Examples
-
-**Analyse an image:**
-```bash
-curl -X POST http://localhost:8000/analyse \
-  -F "file=@/path/to/photo.jpg"
-```
-
-**Analyse audio:**
-```bash
-curl -X POST http://localhost:8000/analyse \
-  -F "file=@/path/to/recording.wav"
-```
-
-**Analyse video:**
-```bash
-curl -X POST http://localhost:8000/analyse \
-  -F "file=@/path/to/video.mp4"
-```
-
-**Health check:**
-```bash
-curl http://localhost:8000/health
-```
-
----
-
-## Python Example
-
-```python
-import httpx
-
-with httpx.Client(base_url="http://localhost:8000") as client:
-    with open("photo.jpg", "rb") as f:
-        response = client.post("/analyse", files={"file": ("photo.jpg", f, "image/jpeg")})
-    result = response.json()
-    print(f"Verdict: {result['verdict']}")
-    print(f"Fake probability: {result['fake_probability']:.2%}")
-    print(f"Confidence: {result['confidence']:.1f}%")
-```
-
----
-
-## Interactive Docs
-
-When the backend is running, browse to:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+| 500 | `INTERNAL_ERROR` | Unexpected backend error |
